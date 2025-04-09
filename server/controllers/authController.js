@@ -34,6 +34,37 @@ export const logoutUser = (req, res) => {
   res.clearCookie('token').json({ message: 'Logged out' })
 }
 
+
+export const checkAuth = async (req, res) => {
+  const token = req.cookies.token;
+
+  if (!token) {
+    return res.status(401).json({ authenticated: false, message: 'No token found' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select('-password');
+    if (!user) {
+      return res.status(401).json({ authenticated: false, message: 'Invalid user' });
+    }
+
+    return res.status(200).json({
+      authenticated: true,
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+      }
+    });
+
+  } catch (error) {
+    res.clearCookie('token');
+    return res.status(401).json({ authenticated: false, message: 'Invalid token' });
+  }
+};
+
+
 // For OAuth2.0 authentication with Google and GitHub
 // The OAuth2.0 authentication process is handled by Passport.js strategies (GoogleStrategy and GitHubStrategy) in the passport.js file
 export const oauthCallback = (req, res) => {

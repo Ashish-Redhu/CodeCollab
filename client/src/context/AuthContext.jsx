@@ -3,29 +3,59 @@ import axios from 'axios';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+
   const [isAuthenticated, setIsAuthenticated] = useState(false); // Default: not logged in
+  const [user, setUser] = useState(null); // Store user details here
   const [loading, setLoading] = useState(true); // Loading state
 
-  const login = () => setIsAuthenticated(true);
-  const logout = () => setIsAuthenticated(false);
+  const SERVER_URL = import.meta.env.VITE_SERVER_URL; 
+
+  const login = (userData) => {
+    setIsAuthenticated(true);
+    setUser(userData);
+  };
+  const logout = async () => {
+    try {
+      await axios.get(`${SERVER_URL}/api/auth/logout`, { withCredentials: true });
+    } 
+    catch (err) {
+      console.error("Logout failed:", err);
+    } 
+    finally {
+      setIsAuthenticated(false);
+      setUser(null);
+    }
+  };
   
   const checkAuth = async () => {
     try {
-      const res = await axios.get('/api/auth/check-auth', { withCredentials: true })
-      setIsAuthenticated(res.data.authenticated)
-    } catch {
-      setIsAuthenticated(false)
+      const res = await axios.get(`${SERVER_URL}/api/auth/checkAuth`, { withCredentials: true });
+      setIsAuthenticated(res.data.authenticated);
+      setUser(res.data.user || null); // Ensure backend sends user details
+    } catch (err) {
+      setIsAuthenticated(false);
+      setUser(null);
+      console.error("Authentication check failed:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     checkAuth()
   }, [])
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated, loading, login, logout }}>
+    <AuthContext.Provider value={{
+      isAuthenticated,
+      setIsAuthenticated,
+      user,
+      setUser,
+      loading,
+      login,
+      logout,
+      checkAuth
+    }}>
       {children}
     </AuthContext.Provider>
   );

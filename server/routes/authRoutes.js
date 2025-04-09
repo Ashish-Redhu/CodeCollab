@@ -1,12 +1,13 @@
 import express from 'express'
 import passport from 'passport'
-import { registerUser, loginUser, logoutUser, oauthCallback } from '../controllers/authController.js'
+import { registerUser, loginUser, logoutUser, oauthCallback, checkAuth } from '../controllers/authController.js'
 
 const router = express.Router()
 
 router.post('/register', registerUser)
 router.post('/login', loginUser)
 router.get('/logout', logoutUser)
+router.get('/checkAuth', checkAuth)
 
 // Google OAuth
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }))

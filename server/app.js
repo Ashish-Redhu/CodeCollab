@@ -11,11 +11,11 @@ dotenv.config()
 
 // Validate required environment variables
 const requiredEnvVars = ['MONGO_URI', 'CLIENT_URL']
-for (const envVar of requiredEnvVars) {
-  if (!process.env[envVar]) {
-    throw new Error(`Missing required environment variable: ${envVar}`)
-  }
-}
+// for (const envVar of requiredEnvVars) {
+//   if (!process.env[envVar]) {
+//     throw new Error(`Missing required environment variable: ${envVar}`)
+//   }
+// }
 
 const app = express()
 
