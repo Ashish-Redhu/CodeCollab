@@ -3,6 +3,7 @@ import LandingPage from './Pages/LandingPage';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import RoomPage from './pages/RoomPage'; 
 import { useAuth } from './context/AuthContext';
 import './App.css';
 import { CircularProgress, Box } from '@mui/material'; // Import loading indicator
@@ -33,6 +34,7 @@ function App() {
                 <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/home" />} />
                 <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to="/home" />} />
                 <Route path="/home" element={isAuthenticated ? <Home /> : <Navigate to="/" />} />
+                <Route path="/room/:roomId" element={isAuthenticated ? <RoomPage /> : <Navigate to="/login" />} />
                 <Route path="*" element={<Navigate to={isAuthenticated ? "/home" : "/"} />} />
             </Routes>
         </Router>

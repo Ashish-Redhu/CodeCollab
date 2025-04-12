@@ -5,6 +5,8 @@ import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import passport from 'passport'
 import authRoutes from './routes/authRoutes.js'
+import roomRoutes from './routes/roomRoutes.js'
+import messageRoutes from './routes/messageRoutes.js';
 import './config/passport.js'
 
 dotenv.config()
@@ -50,6 +52,8 @@ app.get('/', (req, res) => {
 })
 app.use('/api/auth', authRoutes);
 
+app.use('/api/rooms', roomRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

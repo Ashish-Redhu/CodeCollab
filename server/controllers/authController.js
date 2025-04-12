@@ -10,29 +10,49 @@ const generateToken = (user) => {
 }
 
 export const registerUser = async (req, res) => {
-  const { username, email, password } = req.body
-  const userExists = await User.findOne({ email })
-  if (userExists) return res.status(400).json({ message: 'User already exists' })
+  try {
+    const { username, email, password } = req.body;
+    const userExists = await User.findOne({ email });
 
-  const user = await User.create({ username, email, password })
-  const token = generateToken(user)
-  res.cookie('token', token, { httpOnly: true }).json({ message: 'User registered' })
-}
+    if (userExists) return res.status(400).json({ message: 'User already exists' });
+
+    const user = await User.create({ username, email, password });
+
+    const token = generateToken(user);
+    res.cookie('token', token, { httpOnly: true }).json({ message: 'User registered' });
+
+  } catch (error) {
+    console.error('Register Error:', error);
+    res.status(500).json({ message: 'Something went wrong. Please try again.' });
+  }
+};
 
 export const loginUser = async (req, res) => {
-  const { email, password } = req.body
-  const user = await User.findOne({ email })
-  if (!user || !(await user.matchPassword(password))) {
-    return res.status(401).json({ message: 'Invalid credentials' })
-  }
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
 
-  const token = generateToken(user)
-  res.cookie('token', token, { httpOnly: true }).json({ message: 'Login successful' })
-}
+    if (!user || !(await user.matchPassword(password))) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    const token = generateToken(user);
+    res.cookie('token', token, { httpOnly: true }).json({ message: 'Login successful' });
+
+  } catch (error) {
+    console.error('Login Error:', error);
+    res.status(500).json({ message: 'Something went wrong. Please try again.' });
+  }
+};
 
 export const logoutUser = (req, res) => {
-  res.clearCookie('token').json({ message: 'Logged out' })
-}
+  try {
+    res.clearCookie('token').json({ message: 'Logged out' });
+  } catch (error) {
+    console.error('Logout Error:', error);
+    res.status(500).json({ message: 'Something went wrong. Please try again.' });
+  }
+};
 
 
 export const checkAuth = async (req, res) => {
@@ -44,10 +64,15 @@ export const checkAuth = async (req, res) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select('-password');
+    const user = await User.findById(decoded.id)
+    .select('-password')
+    .populate('ownedRooms', 'title _id')
+    .populate('joinedRooms', 'title _id');
+
     if (!user) {
       return res.status(401).json({ authenticated: false, message: 'Invalid user' });
     }
+
 
     return res.status(200).json({
       authenticated: true,
@@ -55,6 +80,8 @@ export const checkAuth = async (req, res) => {
         _id: user._id,
         username: user.username,
         email: user.email,
+        ownedRooms: user.ownedRooms,
+        joinedRooms: user.joinedRooms,
       }
     });
 

@@ -2,7 +2,7 @@ import { Box, Typography, Button, Stack, Divider } from '@mui/material';
 import { styled } from '@mui/system';
 import GoogleIcon from '@mui/icons-material/Google';
 import GitHubIcon from '@mui/icons-material/GitHub';
-
+const serverUrl = import.meta.env.VITE_SERVER_URL;
 const Background = styled(Box)(({ theme }) => ({
   backgroundImage: 'url("https://source.unsplash.com/1600x900/?coding,technology")',
   backgroundSize: 'cover',
@@ -50,7 +50,7 @@ export default function LandingPage() {
             startIcon={<GoogleIcon />}
             sx={{ backgroundColor: '#DB4437', color: '#fff' }}
             fullWidth
-            onClick={() => window.location.href = 'http://localhost:5000/api/auth/google'}
+            onClick={() => window.location.href = `${serverUrl}/api/auth/google`}
           >
             Continue with Google
           </Button>
@@ -60,7 +60,7 @@ export default function LandingPage() {
             startIcon={<GitHubIcon />}
             sx={{ backgroundColor: '#333', color: '#fff' }}
             fullWidth
-            onClick={() => window.location.href = 'http://localhost:5000/api/auth/github'}
+            onClick={() => window.location.href = `${serverUrl}/api/auth/github`}
           >
             Continue with GitHub
           </Button>

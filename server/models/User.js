@@ -24,6 +24,18 @@ const userSchema = new mongoose.Schema({
         type: String, 
         default: 'normal', // owner, gold, normal
     },
+    ownedRooms: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Room",
+        },
+    ],
+    joinedRooms: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Room",
+        },
+    ],
 }, 
 // the below one is an optional field that automatically adds two fields in the schema i) createdAt ii) updatedAt.
     {

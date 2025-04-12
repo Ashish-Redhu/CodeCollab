@@ -11,8 +11,6 @@ export default function Footer() {
         py: 3,
         px: 4,
         mt: 'auto',
-        border: '2px solid red',
-
       }}
     >
       <Grid container spacing={3} justifyContent="space-evenly">

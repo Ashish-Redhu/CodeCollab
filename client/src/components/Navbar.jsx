@@ -71,6 +71,33 @@ export default function Navbar() {
                   {user.username}
                 </Typography>
               </MenuItem>
+
+              {/* Owned Rooms */}
+              <MenuItem disabled>
+                <Typography variant="body2" fontWeight="bold" color="primary">
+                  Owned Rooms
+                </Typography>
+              </MenuItem>
+              {user.ownedRooms?.map((room) => (
+                <MenuItem key={room._id} onClick={() => navigate(`/room/${room._id}`)}>
+                  {room.title}
+                </MenuItem>
+              ))}
+
+              {/* Joined Rooms */}
+              <MenuItem disabled>
+                <Typography variant="body2" fontWeight="bold" color="primary">
+                  Joined Rooms
+                </Typography>
+              </MenuItem>
+              {user.joinedRooms?.map((room) => (
+                <MenuItem key={room._id} onClick={() => navigate(`/room/${room._id}`)}>
+                  {room.title}
+                </MenuItem>
+              ))}
+
+
+
               <MenuItem onClick={handleLogout}>Logout</MenuItem>
             </Menu>
           </>
