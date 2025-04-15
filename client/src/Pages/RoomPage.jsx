@@ -7,6 +7,9 @@ import {
 } from '@mui/material'
 import { Menu, MenuItem, IconButton } from '@mui/material';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import { useNavigate } from 'react-router-dom';
+
+import Chat from '../components/chat/Chat';
 
 // Create a socket instance with autoConnect disabled for manual control
 const socket = io(import.meta.env.VITE_SERVER_URL, {
@@ -15,6 +18,7 @@ const socket = io(import.meta.env.VITE_SERVER_URL, {
 })
 
 export default function RoomPage() {
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const { roomId } = useParams()
   const [room, setRoom] = useState(null)
@@ -26,7 +30,7 @@ export default function RoomPage() {
 
   useEffect(() => {
     // 1.) fetch room details. 
-    axios.get(`${import.meta.env.VITE_SERVER_URL}/api/rooms/${roomId}`, { withCredentials: true })
+    axios.get(`${import.meta.env.VITE_SERVER_URL}/api/rooms/getRoom/${roomId}`, { withCredentials: true })
       .then(res => setRoom(res.data))
       .catch(err => console.error('Failed to fetch room:', err))
 
@@ -42,7 +46,24 @@ export default function RoomPage() {
         })
         .catch(err => console.error('Failed to fetch user:', err));
     
+    // 2.2. Fetch all messages of the room (populate sender usernames)
+    const fetchMessage = async () => {
+        try{
+            const messagesRes = await axios.get(`${import.meta.env.VITE_SERVER_URL}/api/messages/${roomId}`, { withCredentials: true });
+            const formattedMsgs = messagesRes.data.map(msg => ({
+                content: `${msg.sender.username}: ${msg.content}`,
+                roomId: msg.room,
+            }));
+            setMessages(formattedMsgs); // Set messages with sender usernames
+        }
+        catch(err){
+            console.error('Failed to fetch messages:', err);
+        }
+        
+    }
+    fetchMessage(); // Call the function to fetch messages
     
+
     // 4.) Listen for real-time messages.
     socketRef.current.on('receive-message', (message) => {
         setMessages((prev) => [...prev, message]);
@@ -55,6 +76,8 @@ export default function RoomPage() {
 
     // 6.) Cleanup on unmount
     return ()=>{
+        socketRef.current.off('receive-message')
+        socketRef.current.off('room-users')
         socketRef.current.disconnect(); // Gracefully leave the room
         setMessages([]); // Clear messages when leaving
         setUsers([]); // Clear user list
@@ -66,7 +89,8 @@ export default function RoomPage() {
     
     // Structure the message data
      const messageData = {
-        content: `${username}: ${newMessage}`, // Add username before message
+        sendername:username,
+        content: newMessage, 
         roomId
       };
 
@@ -74,10 +98,24 @@ export default function RoomPage() {
     socketRef.current.emit('send-message', messageData);
 
     // Also add it to our local state for instant feedback
-    setMessages(prev => [...prev, messageData]);
+    //setMessages(prev => [...prev, messageData]); // Optimistic update
 
     // Clear the input box
     setNewMessage('');
+  }
+  
+  // Delete Room method
+  const handleDeleteClick = async()=>{
+    try{
+      console.log("Delete started frontend.....");
+      const response = await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/rooms/delete/${roomId}`, {}, {withCredentials: true});
+      alert(response.data.message);
+      navigate('/home');
+    }
+    catch(err){
+      alert(err.message);
+    }
+    
   }
 
  return (
@@ -86,7 +124,11 @@ export default function RoomPage() {
       <Typography variant="h4">
         {room?.title || 'Loading Room...'}
       </Typography>
+      <button onClick={handleDeleteClick}>Delete Room</button>
 
+
+      <Chat/>
+      
       {/* 🧑‍🤝‍🧑 Users in Room */}
       <Paper sx={{ padding: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

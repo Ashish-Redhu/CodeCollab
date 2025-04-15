@@ -1,6 +1,7 @@
 import Room from '../models/Room.js';
 import bcrypt from 'bcrypt';
 import User from '../models/User.js';
+import Message from '../models/Message.js';
 
 export const createRoom = async (req, res) => {
     const { title, passkey } = req.body;
@@ -83,4 +84,42 @@ export const getRoom = async (req, res) => {
         res.status(500).send("Error fetching room");
     }
 }
+
+export const deleteRoom = async (req, res) => {
+  const { roomId } = req.params;
+  const userId = req.user.id;
+
+  try {
+    const room = await Room.findById(roomId);
+
+    if (!room) return res.status(404).json({ message: 'Room not found' });
+
+    if (room.owner.toString() !== userId) {
+      return res.status(403).json({ message: 'Not authorized to delete this room' });
+    }
+
+    // Remove the room from all users' joinedRooms
+    await User.updateMany(
+      {joinedRooms: roomId},
+      {$pull : {joinedRooms : roomId}}
+    )
+
+    // Remove the room from the owner's ownedRooms
+    await User.updateMany(
+      {ownedRooms: roomId},
+      {$pull : {ownedRooms : roomId}}
+    )
+
+    // Delete all messages associated with the room
+    await Message.deleteMany({ room: roomId });
+
+    // Finally, delete the room itself
+    await room.deleteOne();
+
+    res.json({ message: 'Room deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error deleting room' });
+  }
+};
   

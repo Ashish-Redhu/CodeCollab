@@ -50,6 +50,33 @@ userSchema.pre("save", async function(next) {
     next()
 });
 
+// If a User gets deleted
+userSchema.pre("deleteOne", {document: true, query: false}, async function(next){
+    const userId = this._id;
+
+    try{
+
+        // Remove user from rooms they joined
+        await mongoose.model("Room").updateMany(
+            { users: userId}, 
+            { $pull : {users : userId}}
+        )
+
+        // Find and delete rooms where user is the owner
+        const roomsOwned = await mongoose.model("Room").find({owner: userId});
+
+        for(const room of roomsOwned){
+            await room.deleteOne(); // This will trigger Room's pre deleteOne hook
+        }
+        next();
+    }
+    catch(err){
+        next(err);
+
+
+    }
+});
+
 userSchema.methods.matchPassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password)
 }

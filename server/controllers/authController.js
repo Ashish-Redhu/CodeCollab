@@ -55,6 +55,34 @@ export const logoutUser = (req, res) => {
 };
 
 
+export const deleteUser = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Delete all rooms owned by user (cascade handled there)
+    const ownedRooms = await Room.find({ owner: userId });
+    for (let room of ownedRooms) {
+      await Message.deleteMany({ room: room._id });
+      await room.deleteOne();
+    }
+
+    // Remove user from rooms they joined
+    await Room.updateMany({}, { $pull: { users: userId } });
+
+    // Delete user
+    await user.deleteOne();
+
+    res.clearCookie('token').json({ message: 'User and related data deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error deleting user' });
+  }
+};
+
+
 export const checkAuth = async (req, res) => {
   const token = req.cookies.token;
 
