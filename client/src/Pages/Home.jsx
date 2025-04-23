@@ -15,11 +15,11 @@ export default function Home() {
         <Container maxWidth="xl">
           <Grid
             container
-            spacing={4}
+            spacing={2}
             justifyContent="center"
             alignItems="stretch"
           >
-            <Grid item xs={12} md={5}>
+            <Grid item xs={12} md={6}>
               <JoinRoomCard />
             </Grid>
 
@@ -27,7 +27,7 @@ export default function Home() {
               <Divider orientation="vertical" sx={{ height: '80%', backgroundColor: '#888' }} />
             </Grid>
 
-            <Grid item xs={12} md={5}>
+            <Grid item xs={12} md={6}>
               <CreateRoomCard />
             </Grid>
           </Grid>

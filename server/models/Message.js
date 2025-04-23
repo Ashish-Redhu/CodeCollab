@@ -14,13 +14,29 @@ const messageSchema = new mongoose.Schema({
   },
   content: {
     type: String,
-    required: true
+    default: "",
   },
-  sentAt: {
+  fileUrl: {
+    type: String,
+  },
+  fileType: {
+    type: String,
+    enum: ["image", "audio", "video", "pdf", "none"],
+    default: "none",
+  },
+  timeStamp: {
     type: Date,
     default: Date.now
   }
 });
 
+ messageSchema.index({ room: 1, timeStamp: -1 }); // For performance: Efficiently return the latest messages first without scanning the entire collection.
+
 const Message = mongoose.model("Message", messageSchema);
 export default Message;
+
+
+// How we will handle the files: 
+// Receiving the file from the frontend
+// Uploading it to Cloudinary
+// Saving the resulting file URL in the MongoDB database

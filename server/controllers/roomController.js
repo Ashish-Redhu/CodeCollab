@@ -2,6 +2,7 @@ import Room from '../models/Room.js';
 import bcrypt from 'bcrypt';
 import User from '../models/User.js';
 import Message from '../models/Message.js';
+import { io } from '../server.js';
 
 export const createRoom = async (req, res) => {
     const { title, passkey } = req.body;
@@ -40,7 +41,7 @@ export const createRoom = async (req, res) => {
 export const joinRoom = async (req, res) => {
 
     const { title, passkey } = req.body;
-    const userId = req.user.id; // check if user is authenticated and get userId from token
+    const userId = req.user._id; // check if user is authenticated and get userId from token
     try {
       const room = await Room.findOne({ title });
       if (!room) return res.status(404).send("Room not found");
@@ -77,7 +78,10 @@ export const joinRoom = async (req, res) => {
 export const getRoom = async (req, res) => {
     const { roomId } = req.params;
     try {
-        const room = await Room.findById(roomId).populate('users', 'username');
+        const room = await Room.findById(roomId)
+          .populate('users', 'username')
+          .populate('owner', 'username'); 
+
         if (!room) return res.status(404).send("Room not found");
         res.send(room);
     } catch (err) {
@@ -115,6 +119,9 @@ export const deleteRoom = async (req, res) => {
 
     // Finally, delete the room itself
     await room.deleteOne();
+
+    // Notify all users in that room
+    io.to(roomId).emit('room-deleted');
 
     res.json({ message: 'Room deleted successfully' });
   } catch (err) {

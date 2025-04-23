@@ -1,11 +1,13 @@
 // src/components/JoinRoomCard.jsx
 import React from 'react'
 import { useState } from 'react';
-import { Paper, Typography, TextField, Button, Box } from '@mui/material'
+import { Paper, Typography, TextField, Button, Box, IconButton, InputAdornment } from '@mui/material'
+import { Visibility, VisibilityOff } from '@mui/icons-material'
 import axios from 'axios'
 const serverUrl = import .meta.env.VITE_SERVER_URL;
 export default function JoinRoomCard() {
   const [roomDetails, setRoomDetails] = useState({ title: "", passkey: "" });
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = async(e) => {
     e.preventDefault();    
@@ -39,6 +41,7 @@ export default function JoinRoomCard() {
       sx={{
         height: '100%',
         minHeight: 300,
+        maxWidth: 500,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
@@ -46,6 +49,7 @@ export default function JoinRoomCard() {
         backgroundColor: '#1f1f1f',
         color: '#fff',
         borderRadius: 4,
+        margin: '0 auto', // to center it inside grid
       }}
     >
       <Typography variant="h5" gutterBottom>
@@ -69,12 +73,26 @@ export default function JoinRoomCard() {
           fullWidth
           variant="outlined"
           label="Room Passkey"
-          type="password"
+          type={showPassword ? 'text' : 'password'}
           value={roomDetails.passkey}
           onChange={(e) => setRoomDetails({ ...roomDetails, passkey: e.target.value })}
           sx={{ mb: 2 }}
           InputLabelProps={{ style: { color: '#ccc' } }}
           InputProps={{ style: { color: '#fff' } }}
+          InputProps={{
+            sx: { color: '#fff' },
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => setShowPassword(prev => !prev)}
+                  edge="end"
+                  sx={{ color: '#aaa' }}
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            )
+          }}
         />
         <Button
           variant="contained"

@@ -3,9 +3,16 @@ import {
   Toolbar,
   Typography,
   IconButton,
-  Menu,
-  MenuItem,
   Avatar,
+  Drawer,
+  Box,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+  useTheme,
+  useMediaQuery,
+  Button,
 } from '@mui/material'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -13,18 +20,11 @@ import { useAuth } from '../context/authContext'
 import axios from 'axios'
 
 export default function Navbar() {
-  const [anchorEl, setAnchorEl] = useState(null)
-  const open = Boolean(anchorEl)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const navigate = useNavigate()
   const { user, setIsAuthenticated } = useAuth()
-
-  const handleMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget)
-  }
-
-  const handleMenuClose = () => {
-    setAnchorEl(null)
-  }
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
   const handleLogout = async () => {
     try {
@@ -36,20 +36,20 @@ export default function Navbar() {
     } catch (err) {
       console.error('Logout failed:', err)
     } finally {
-      handleMenuClose()
+      setDrawerOpen(false)
     }
   }
 
   return (
-    <AppBar position="static" sx={{ backgroundColor: '#111' }}>
-      <Toolbar sx={{ justifyContent: 'space-between' }}>
-        <Typography variant="h6" fontWeight="bold">
-          CodeCollab
-        </Typography>
+    <>
+      <AppBar position="static" sx={{ backgroundColor: '#111' }}>
+        <Toolbar sx={{ justifyContent: 'space-between' }}>
+          <Typography variant="h6" fontWeight="bold">
+            CodeCollab
+          </Typography>
 
-        {user && (
-          <>
-            <IconButton onClick={handleMenuOpen}>
+          {user && (
+            <IconButton onClick={() => setDrawerOpen(true)}>
               {user.avatar ? (
                 <Avatar alt={user.username} src={user.avatar} />
               ) : (
@@ -58,51 +58,109 @@ export default function Navbar() {
                 </Avatar>
               )}
             </IconButton>
+          )}
+        </Toolbar>
+      </AppBar>
 
-            <Menu
-              anchorEl={anchorEl}
-              open={open}
-              onClose={handleMenuClose}
-              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-            >
-              <MenuItem disabled>
-                <Typography variant="body1" fontWeight="bold">
-                  {user.username}
-                </Typography>
-              </MenuItem>
+      {/* Slide-in Drawer */}
+      <Drawer
+        anchor="right"
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        PaperProps={{
+          sx: {
+            width: isMobile ? '80%' : 320,
+            padding: 2,
+            backgroundColor: '#1e1e1e',
+            color: 'white',
+          },
+        }}
+      >
+        <Box>
+          <Typography variant="h6" fontWeight="bold" gutterBottom>
+            {user?.username}
+          </Typography>
 
-              {/* Owned Rooms */}
-              <MenuItem disabled>
-                <Typography variant="body2" fontWeight="bold" color="primary">
-                  Owned Rooms
-                </Typography>
-              </MenuItem>
-              {user.ownedRooms?.map((room) => (
-                <MenuItem key={room._id} onClick={() => navigate(`/room/${room._id}`)}>
-                  {room.title}
-                </MenuItem>
-              ))}
+          <Divider sx={{ bgcolor: 'gray', mb: 2 }} />
 
-              {/* Joined Rooms */}
-              <MenuItem disabled>
-                <Typography variant="body2" fontWeight="bold" color="primary">
-                  Joined Rooms
-                </Typography>
-              </MenuItem>
-              {user.joinedRooms?.map((room) => (
-                <MenuItem key={room._id} onClick={() => navigate(`/room/${room._id}`)}>
-                  {room.title}
-                </MenuItem>
-              ))}
+          {/* Owned Rooms */}
+          {user.ownedRooms.length > 0 && <Typography variant="body2" color="primary" fontWeight="bold" gutterBottom>
+            Owned Rooms
+          </Typography>}
+          
+          <List>
+            {user?.ownedRooms?.map((room) => (
+              <ListItem
+                button
+                key={room._id}
+                onClick={() => {
+                  navigate(`/room/${room._id}`)
+                  setDrawerOpen(false)
+                }}
+                sx={{
+                  borderRadius: 1,
+                  transition: 'background-color 0.2s ease',
+                  '&:hover': {
+                    backgroundColor: '#333',
+                    cursor: 'pointer',
+                  },
+                }}
+              >
+                <ListItemText primary={room.title} />
+              </ListItem>
+            ))}
+          </List>
 
+          {/* Joined Rooms */}
+          {user?.joinedRooms.length > 0 && (
+            <Typography variant="body2" color="primary" fontWeight="bold" gutterBottom sx={{ mt: 2 }}>
+              Joined Rooms
+            </Typography>
+          )}
+          <List>
+            {user?.joinedRooms?.map((room) => (
+              <ListItem
+                button
+                key={room._id}
+                onClick={() => {
+                  navigate(`/room/${room._id}`)
+                  setDrawerOpen(false)
+                }}
+                sx={{
+                  borderRadius: 1,
+                  transition: 'background-color 0.2s ease',
+                  '&:hover': {
+                    backgroundColor: '#333',
+                    cursor: 'pointer',
+                  },
+                }}
+              >
+                <ListItemText primary={room.title} />
+              </ListItem>
+            ))}
+          </List>
 
+          <Divider sx={{ bgcolor: 'gray', mt: 3, mb: 2 }} />
 
-              <MenuItem onClick={handleLogout}>Logout</MenuItem>
-            </Menu>
-          </>
-        )}
-      </Toolbar>
-    </AppBar>
+          <Button
+            fullWidth
+            variant="outlined"
+            color="error"
+            onClick={handleLogout}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 'bold',
+              borderColor: '#f44336',
+              '&:hover': {
+                backgroundColor: '#f44336',
+                color: 'white',
+              },
+            }}
+          >
+            Logout
+          </Button>
+        </Box>
+      </Drawer>
+    </>
   )
 }

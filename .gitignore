@@ -12,6 +12,7 @@ server/build/
 .env
 client/.env
 server/.env
+*.env
 
 # Logs
 *.log

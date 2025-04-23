@@ -1,11 +1,15 @@
 // src/components/CreateRoomCard.jsx
 import React from 'react'
-import { Paper, Typography, TextField, Button, Box } from '@mui/material'
+import { useState } from 'react';
+import { Paper, Typography, TextField, Button, Box, IconButton, InputAdornment } from '@mui/material'
+import { Visibility, VisibilityOff } from '@mui/icons-material'
 const serverUrl = import .meta.env.VITE_SERVER_URL;
 import axios from 'axios'
 export default function CreateRoomCard() {
-  const [roomDetails, setRoomDetails] = React.useState({ title: "", passkey: "" });
-  
+  const [roomDetails, setRoomDetails] = React.useState({ title: "", passkey: "", });
+  const [showPassword, setShowPassword] = useState(false)
+  const [confirmPasskey, setConfirmPasskey] = useState("");
+
   const handleSubmit = async(e) => {
     e.preventDefault();
     console.log("Room creation started FRONTEND:", roomDetails);
@@ -20,7 +24,8 @@ export default function CreateRoomCard() {
         { withCredentials: true }
       );
       alert("Room created successfully!");
-      setRoomDetails({ title: "", passkey: "" });
+      setRoomDetails({ title: "", passkey: "", });
+      setConfirmPasskey("");
 
     }
     catch(error){
@@ -39,6 +44,7 @@ export default function CreateRoomCard() {
       sx={{
         height: '100%',
         minHeight: 300,
+        maxWidth: 500,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
@@ -46,6 +52,7 @@ export default function CreateRoomCard() {
         backgroundColor: '#2c2c2c',
         color: '#fff',
         borderRadius: 4,
+        margin: '0 auto', // to center it inside grid
       }}
     >
       <Typography variant="h5" gutterBottom>
@@ -71,15 +78,58 @@ export default function CreateRoomCard() {
           label="Set Passkey"
           value={roomDetails.passkey}
           onChange={(e) => setRoomDetails({ ...roomDetails, passkey: e.target.value })}
-          type="password"
+          type={showPassword ? 'text' : 'password'}
           sx={{ mb: 2 }}
           InputLabelProps={{ style: { color: '#ccc' } }}
           InputProps={{ style: { color: '#fff' } }}
+          InputProps={{
+            sx: { color: '#fff' },
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => setShowPassword(prev => !prev)}
+                  edge="end"
+                  sx={{ color: '#aaa' }}
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            )
+          }}
+        />
+        <TextField
+          fullWidth
+          variant="outlined"
+          label="Confirm Passkey"
+          value={confirmPasskey}
+          onChange={(e) => setConfirmPasskey(e.target.value)}
+          type={showPassword ? 'text' : 'password'}
+          sx={{ mb: 2 }}
+          error={confirmPasskey !== "" && roomDetails.passkey !== confirmPasskey}
+          helperText={confirmPasskey !== "" && roomDetails.passkey !== confirmPasskey ? "Passkeys do not match" : ""}
+          InputLabelProps={{ style: { color: '#ccc' } }}
+          InputProps={{
+            sx: { color: '#fff' },
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => setShowPassword(prev => !prev)}
+                  edge="end"
+                  sx={{ color: '#aaa' }}
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            )
+          }}
         />
         <Button
           variant="outlined"
           fullWidth
           onClick={handleSubmit}
+          disabled={
+            !roomDetails.title || !roomDetails.passkey || roomDetails.passkey !== confirmPasskey
+          }
           sx={{ mt: 1, color: '#fff', borderColor: '#fff' }}
         >
           Create Room

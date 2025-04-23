@@ -5,15 +5,31 @@ export const saveMessage = async(req, res) =>{
     try {
         const { content, roomId } = req.body;
         const senderId = req.user._id; // protect jwt middleware will populate req.user with the authenticated user.
+         
+        let fileUrl = null;
+        let fileType = "none";
+
+        if(req.file){
+
+          console.log("Uploaded file info: "+req.file);
+          fileUrl = req.file.path;
+          const mimeType = req.file.mimetype;
+   
+          if (mimeType.includes("image")) fileType = "image";
+          else if (mimeType.includes("video")) fileType = "video";
+          else if (mimeType.includes("audio")) fileType = "audio";
+          else if (mimeType.includes("pdf")) fileType = "pdf";
+        }
     
         const message = await Message.create({
           room: roomId,
           sender: senderId,
-          content
-        });
+          content,
+          fileUrl,
+          fileType,
+        });       
     
         const populatedMsg = await message.populate('sender', 'username');
-    
         res.status(201).json(populatedMsg);
       } catch (err) {
         console.error(err);
@@ -26,7 +42,8 @@ export const getMessages = async(req, res) =>{
     
         const messages = await Message.find({ room: roomId })
           .populate('sender', 'username')
-          .sort({ sentAt: 1 });
+          .sort({ timeStamp: 1 })
+          .limit(20); // This is called paging which will only a few messages (20) here to load at a time. 
     
         res.json(messages);
       } catch (err) {

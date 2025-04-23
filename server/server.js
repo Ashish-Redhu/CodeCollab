@@ -36,35 +36,52 @@ io.on('connection', (socket) => {
     console.log(`Socket ${socket.id} joined room ${roomId}`)
   })
 
-  socket.on('send-message', async({sendername, content, roomId}) => {
+  socket.on('send-message', async({sendername, content, roomId, timeStamp, fileUrl}) => {
     try{
 
       // 1.) find user
-      const sender = await User.findOne({ username: sendername })
+      const sender = await User.findOne({ username: sendername });
 
-      // 2. Save message to DB
-      const newMsg = new Message({
-        content, 
-        room: roomId,
-        sender: sender._id
-      });
-      await newMsg.save();
+      // ONLY save to DB if fileUrl is not present (text-only msg)
+      if (!fileUrl) {
+        const newMsg = new Message({
+          content, 
+          room: roomId,
+          sender: sender._id,
+          timeStamp,
+        });
+        await newMsg.save();
 
-      // 3.) Push message to room.
-      await Room.findByIdAndUpdate(roomId, {
-        $push: { messages: newMsg._id }
-      });
+        await Room.findByIdAndUpdate(roomId, { $push: { messages: newMsg._id } });
+      }
+
+      // // 2. Save message to DB
+      // const newMsg = new Message({
+      //   content, 
+      //   room: roomId,
+      //   sender: sender._id,
+      //   fileUrl,
+      //   timeStamp: timeStamp,
+      // });
+      // await newMsg.save();
+
+      // // 3.) Push message to room.
+      // await Room.findByIdAndUpdate(roomId, {
+      //   $push: { messages: newMsg._id }
+      // });
 
       // 4.) Broadcast message. 
       io.to(roomId).emit('receive-message', { 
-        content : `${sender.username} : ${content}`,
-        roomId
+        sender: sender.username,
+        content,
+        roomId, 
+        timeStamp,
+        fileUrl,
       })
     }
     catch(error){
       console.error('Failed to send message:', error);
     }
-
    
   })
 
@@ -82,3 +99,5 @@ io.on('connection', (socket) => {
 server.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`)
 })
+
+export { io };

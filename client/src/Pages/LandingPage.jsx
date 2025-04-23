@@ -13,6 +13,8 @@ const Background = styled(Box)(({ theme }) => ({
   justifyContent: 'center',
 }));
 
+
+
 const Overlay = styled(Box)(({ theme }) => ({
   backgroundColor: 'rgba(0, 0, 0, 0.6)',
   padding: theme.spacing(6),
@@ -23,6 +25,7 @@ const Overlay = styled(Box)(({ theme }) => ({
 }));
 
 export default function LandingPage() {
+
   return (
     <Background>
       <Overlay>
