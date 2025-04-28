@@ -36,6 +36,11 @@ io.on('connection', (socket) => {
     console.log(`Socket ${socket.id} joined room ${roomId}`)
   })
 
+  // Code editor related things:
+  socket.on("code-change", ({ roomId, code }) => {
+    socket.to(roomId).emit("code-change", { code });
+  });
+
   socket.on('send-message', async({sendername, content, roomId, timeStamp, fileUrl}) => {
     try{
 

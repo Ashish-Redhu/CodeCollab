@@ -50,7 +50,8 @@ export const joinRoom = async (req, res) => {
       if (!match) return res.status(401).send("Incorrect passkey");
 
       // Check if the user is the owner of the room
-      if (room.owner.toString() === userId) {
+      console.log("Owner ID:", room.owner.toString(), "User ID:", userId);
+      if (room.owner.toString() === userId.toString()) {
         return res.status(400).send("Owner cannot join their own room as a participant");
       }
   

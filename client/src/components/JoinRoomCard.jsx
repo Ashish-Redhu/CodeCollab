@@ -3,8 +3,11 @@ import React from 'react'
 import { useState } from 'react';
 import { Paper, Typography, TextField, Button, Box, IconButton, InputAdornment } from '@mui/material'
 import { Visibility, VisibilityOff } from '@mui/icons-material'
+import { toast } from 'react-toastify';
+
 import axios from 'axios'
 const serverUrl = import .meta.env.VITE_SERVER_URL;
+
 export default function JoinRoomCard() {
   const [roomDetails, setRoomDetails] = useState({ title: "", passkey: "" });
   const [showPassword, setShowPassword] = useState(false)
@@ -12,7 +15,7 @@ export default function JoinRoomCard() {
   const handleSubmit = async(e) => {
     e.preventDefault();    
     try{
-      console.log("Joining start frontend....");
+      // console.log("Joining start frontend....");
       const joinedRoom = await axios.post(
         `${serverUrl}/api/rooms/join`,
         {
@@ -21,7 +24,20 @@ export default function JoinRoomCard() {
         },
         { withCredentials: true }
       );
-      alert("Room joined successfully!");
+      // alert("Room joined successfully!");
+      toast.success('Room joined successfully! ➡️ Click on your profile to view joined rooms.', {
+        position: "top-right",
+        autoClose: 5000, // visible for 5 seconds
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+        style: {
+          marginRight: '75px', // move it a bit left from right edge
+        },
+      });
+
       setRoomDetails({ title: "", passkey: "" });
 
     }

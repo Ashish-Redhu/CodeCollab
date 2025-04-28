@@ -9,8 +9,10 @@ import roomRoutes from './routes/roomRoutes.js'
 import messageRoutes from './routes/messageRoutes.js';
 import './config/passport.js'
 
+import axios from 'axios';
 dotenv.config()
 
+const PISTON_API_URL = "https://emkc.org/api/v2/piston/execute";
 // Validate required environment variables
 const requiredEnvVars = ['MONGO_URI', 'CLIENT_URL']
 // for (const envVar of requiredEnvVars) {
@@ -26,7 +28,7 @@ app.use(express.json())
 app.use(cookieParser())
 app.use(cors({
   origin: process.env.CLIENT_URL,
-  method: ["Get", "Post"],
+  methods: ["GET", "POST"],
   credentials: true
 }))
 
@@ -55,6 +57,22 @@ app.use('/api/auth', authRoutes);
 
 app.use('/api/rooms', roomRoutes);
 app.use('/api/messages', messageRoutes);
+
+app.post('/run-code', async (req, res) => {
+  const { language, version, files } = req.body
+
+  try {
+    const response = await axios.post(PISTON_API_URL, {
+      language,
+      version,
+      files
+    })
+    res.json(response.data)
+  } catch (error) {
+    console.error('Error executing code:', error)
+    res.status(500).json({ error: 'Error executing code' })
+  }
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -3,6 +3,8 @@ import React from 'react'
 import { useState } from 'react';
 import { Paper, Typography, TextField, Button, Box, IconButton, InputAdornment } from '@mui/material'
 import { Visibility, VisibilityOff } from '@mui/icons-material'
+import { toast } from 'react-toastify';
+
 const serverUrl = import .meta.env.VITE_SERVER_URL;
 import axios from 'axios'
 export default function CreateRoomCard() {
@@ -12,7 +14,7 @@ export default function CreateRoomCard() {
 
   const handleSubmit = async(e) => {
     e.preventDefault();
-    console.log("Room creation started FRONTEND:", roomDetails);
+    // console.log("Room creation started FRONTEND:", roomDetails);
     
     try{
       const newRoom = await axios.post(
@@ -23,7 +25,20 @@ export default function CreateRoomCard() {
         },
         { withCredentials: true }
       );
-      alert("Room created successfully!");
+      // alert("Room created successfully!");
+      toast.success('Room created successfully! ➡️ Click on your profile to view Owned/joined rooms.', {
+        position: "top-right",
+        autoClose: 5000, // visible for 5 seconds
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "colored",
+        style: {
+          marginRight: '75px', // move it a bit left from right edge
+        },
+      });
+
       setRoomDetails({ title: "", passkey: "", });
       setConfirmPasskey("");
 

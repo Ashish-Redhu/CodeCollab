@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ChatSection from '../components/ChatSection';
+import CodingPart from '../components/CodingPart';
 import { io } from 'socket.io-client';
 
 const socket = io(import.meta.env.VITE_SERVER_URL, {
@@ -29,6 +30,20 @@ export default function RoomPage() {
   const socketRef = useRef(socket);
   const theme = useTheme();
   const isLargeScreen = useMediaQuery('(min-width:1200px)');
+
+
+  // Code editor related things: 
+  const [code, setCode] = useState("// Write your code here...");
+  const [language, setLanguage] = useState('java');
+
+  const editorRef = useRef(null);
+
+  const handleEditorChange = (value) => {
+    setCode(value);
+    socket.emit("code-change", { roomId: roomId, code: value });
+  };
+
+
 
   useEffect(() => {
     axios
@@ -76,6 +91,12 @@ export default function RoomPage() {
       alert(err.message);
     }
   };
+
+  useEffect(() => {
+    socket.on("code-change", ({ code }) => {
+      setCode(code);
+    });
+  }, []);
 
   return (
     <Box
@@ -249,12 +270,13 @@ export default function RoomPage() {
         {/* Code Collaboration Section */}
         <Box mt={4}>
           <Typography variant="h6" color="primary.light" gutterBottom>
-            💻 Code Collaboration (Coming Soon)
+            💻 Code Collaboration
           </Typography>
           <Paper sx={{ bgcolor: '#1c1c2e', p: 3, borderRadius: 2 }}>
             <Typography color="gray">
               This feature will let you collaborate on code in real time!
             </Typography>
+            <CodingPart value={code} onChange={handleEditorChange} language={language} setLanguage={setLanguage}/>
           </Paper>
         </Box>
       </Paper>

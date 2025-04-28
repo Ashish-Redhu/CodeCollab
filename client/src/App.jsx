@@ -7,6 +7,8 @@ import RoomPage from './pages/RoomPage';
 import { useAuth } from './context/AuthContext';
 import './App.css';
 import { CircularProgress, Box } from '@mui/material'; // Import loading indicator
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
     const { isAuthenticated, loading } = useAuth();
@@ -37,7 +39,9 @@ function App() {
                 <Route path="/room/:roomId" element={isAuthenticated ? <RoomPage /> : <Navigate to="/login" />} />
                 <Route path="*" element={<Navigate to={isAuthenticated ? "/home" : "/"} />} />
             </Routes>
+            <ToastContainer />
         </Router>
+    
     );
 }
 
