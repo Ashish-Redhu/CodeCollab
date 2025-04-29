@@ -22,10 +22,9 @@ const socket = io(import.meta.env.VITE_SERVER_URL, {
   withCredentials: true,
 });
 
-export default function ChatSection({ roomId, username }) {
+export default function ChatSection({ roomId, username, totalUsers }) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [users, setUsers] = useState([]);
   const messagesEndRef = useRef(null);
   const [file, setFile] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
@@ -49,16 +48,16 @@ export default function ChatSection({ roomId, username }) {
     };
     fetchMessages();
 
-    socket.connect();
-    socket.emit('join-room', { roomId, username });
+    // socket.connect();
+    // socket.emit('join-room', { roomId, username });
     
     socket.on('receive-message', (message) => {
       setMessages((prev) => [...prev, message]);
     });
 
-    socket.on('room-users', (roomUsers) => {
-      setUsers(roomUsers);
-    });
+    // socket.on('room-users', (roomUsers) => {
+    //   setUsers(roomUsers);
+    // });
 
     socket.on('typing', ({ isTyping }) => {
       setIsTyping(isTyping);
@@ -181,7 +180,7 @@ export default function ChatSection({ roomId, username }) {
           </Badge>
         </Box>
         <Typography variant="body2" sx={{ color: '#a0a0a0'}}>
-          {users.length/2} {users.length === 1 ? 'member' : 'members'} in total
+          {totalUsers} {totalUsers === 1 ? 'member' : 'members'} in total
         </Typography>
       </Box>
 

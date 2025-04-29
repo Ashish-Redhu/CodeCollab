@@ -21,20 +21,32 @@ const io = new Server(server, {
   }
 })
 
-const usersInRoom = {} // roomId => [ { socketId, username } ]
+const usersActiveInRoom = {} // roomId => [ { socketId, username } ]
+
+// Here's what's happening below:
+// 1. io --> is your Socket.IO server instance.
+// 2. io.on('connection', ...) --> sets up a listener that gets triggered whenever a new client connects to your server.
+// 3. The socket object is a representation of the individual client that just connected.
+// 3.i It allows you to interact with that specific client (e.g., send/receive events to/from them).
+// 3.ii Every connected client has their own socket instance on the server side.
 
 io.on('connection', (socket) => {
-  console.log('User connected:', socket.id)
+  // console.log('User connected:', socket.id)
 
-  socket.on('join-room', ({ roomId, username }) => {
+  socket.on('enter-room', ({ roomId, username }) => {
     socket.join(roomId)
-    if (!usersInRoom[roomId]) usersInRoom[roomId] = []
-    usersInRoom[roomId].push({ socketId: socket.id, username })
+    if (!usersActiveInRoom[roomId]) usersActiveInRoom[roomId] = []
+    usersActiveInRoom[roomId].push({ socketId: socket.id, username })
 
     // Notify everyone in room
-    io.to(roomId).emit('room-users', usersInRoom[roomId])
-    console.log(`Socket ${socket.id} joined room ${roomId}`)
+    io.to(roomId).emit('room-users', usersActiveInRoom[roomId])
+    // console.log(`Socket/User = ${socket.id} entered room = ${roomId}`)
   })
+
+  socket.on('update-total-members', ({ roomId, total }) => {
+    // Broadcast to everyone in the room
+    io.to(roomId).emit('total-members-updated', total);
+  });
 
   // Code editor related things:
   socket.on("code-change", ({ roomId, code }) => {
@@ -92,9 +104,9 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     // Remove user from all rooms
-    for (const roomId in usersInRoom) {
-      usersInRoom[roomId] = usersInRoom[roomId].filter(user => user.socketId !== socket.id)
-      io.to(roomId).emit('room-users', usersInRoom[roomId])
+    for (const roomId in usersActiveInRoom) {
+      usersActiveInRoom[roomId] = usersActiveInRoom[roomId].filter(user => user.socketId !== socket.id)
+      io.to(roomId).emit('room-users', usersActiveInRoom[roomId])
     }
     console.log('User disconnected:', socket.id)
   })

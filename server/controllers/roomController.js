@@ -6,7 +6,7 @@ import { io } from '../server.js';
 
 export const createRoom = async (req, res) => {
     const { title, passkey } = req.body;
-    const userId = req.user.id;  // this will be populated by authentication middleware used in routes. 
+    const userId = req.user.id;  // this will be populated by authentication middleware used in routes
     try 
     {   
         // Check if room already exists
@@ -39,9 +39,8 @@ export const createRoom = async (req, res) => {
 }
 
 export const joinRoom = async (req, res) => {
-
     const { title, passkey } = req.body;
-    const userId = req.user._id; // check if user is authenticated and get userId from token
+    const userId = req.user.id; // check if user is authenticated and get userId from token
     try {
       const room = await Room.findOne({ title });
       if (!room) return res.status(404).send("Room not found");
@@ -50,8 +49,7 @@ export const joinRoom = async (req, res) => {
       if (!match) return res.status(401).send("Incorrect passkey");
 
       // Check if the user is the owner of the room
-      console.log("Owner ID:", room.owner.toString(), "User ID:", userId);
-      if (room.owner.toString() === userId.toString()) {
+      if (room.owner.toString() === userId) {
         return res.status(400).send("Owner cannot join their own room as a participant");
       }
   
@@ -66,7 +64,8 @@ export const joinRoom = async (req, res) => {
         user.joinedRooms.push(room._id);
         await user.save();
       }
-  
+
+      io.to(room._id).emit('user-joined', userId); // Notify all users in that room
       res.send(room);
     } 
     catch (err) 
@@ -99,7 +98,7 @@ export const deleteRoom = async (req, res) => {
 
     if (!room) return res.status(404).json({ message: 'Room not found' });
 
-    if (room.owner.toString() !== userId) {
+    if (room.owner.toString() !== userId.toString()) {
       return res.status(403).json({ message: 'Not authorized to delete this room' });
     }
 
@@ -130,4 +129,51 @@ export const deleteRoom = async (req, res) => {
     res.status(500).json({ message: 'Error deleting room' });
   }
 };
-  
+
+export const leaveRoom = async (req, res) => {
+  const { roomId } = req.params;
+  const userId = req.user.id;
+
+  try {
+      //1. Check if room exists and user is in it
+      const room = await Room.findById(roomId);
+      if (!room) {
+          return res.status(404).json({ message: 'Room not found' });
+      }
+      if (!room.users.includes(userId)) {
+          return res.status(400).json({ message: 'User not in this room' });
+      }
+      
+      //2. Check if user exists and room is in user's joinedRooms
+      const user = await User.findById(userId);
+      if (!user) {
+          return res.status(404).json({ message: 'User not found' });
+      }
+      if (!user.joinedRooms.includes(roomId)) {
+          return res.status(400).json({ message: 'Room not in user\'s joined rooms' });
+      }
+
+      await Promise.all([
+          Room.updateOne(
+              { _id: roomId }, 
+              { $pull: { users: userId } }
+          ),
+          User.updateOne(
+              { _id: userId }, 
+              { $pull: { joinedRooms: roomId } }
+          )
+      ]);
+
+      // Notify all users in that room
+      // io.to(roomId).emit('room-left', user.username);
+      io.to(roomId).emit('room-left', {
+        leftUsername: user.username,
+        totalMembers: room.users.length-1
+      });
+      
+      res.json({ message: 'Room left successfully' });
+  } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Error leaving room' });
+  }
+};

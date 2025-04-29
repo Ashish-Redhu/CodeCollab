@@ -4,13 +4,17 @@ import { useState } from 'react';
 import { Paper, Typography, TextField, Button, Box, IconButton, InputAdornment } from '@mui/material'
 import { Visibility, VisibilityOff } from '@mui/icons-material'
 import { toast } from 'react-toastify';
-
+import { useNavigate } from 'react-router-dom';
 const serverUrl = import .meta.env.VITE_SERVER_URL;
 import axios from 'axios'
+
+
 export default function CreateRoomCard() {
   const [roomDetails, setRoomDetails] = React.useState({ title: "", passkey: "", });
   const [showPassword, setShowPassword] = useState(false)
   const [confirmPasskey, setConfirmPasskey] = useState("");
+  const navigate = useNavigate();
+
 
   const handleSubmit = async(e) => {
     e.preventDefault();
@@ -25,23 +29,19 @@ export default function CreateRoomCard() {
         },
         { withCredentials: true }
       );
+
+      console.log(newRoom);
       // alert("Room created successfully!");
-      toast.success('Room created successfully! ➡️ Click on your profile to view Owned/joined rooms.', {
-        position: "top-right",
-        autoClose: 5000, // visible for 5 seconds
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
+      toast.success('Room created successfully! ➡️ Redirecting...', {
+        position: "top-center",
+        autoClose: 3000,
         theme: "colored",
-        style: {
-          marginRight: '75px', // move it a bit left from right edge
-        },
       });
 
       setRoomDetails({ title: "", passkey: "", });
       setConfirmPasskey("");
 
+      navigate(`/room/${newRoom.data._id}`);
     }
     catch(error){
        // Handling errors and showing alerts

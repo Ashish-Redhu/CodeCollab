@@ -14,7 +14,11 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import ChatSection from '../components/ChatSection';
 import CodingPart from '../components/CodingPart';
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
 import { io } from 'socket.io-client';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { toast } from 'react-toastify';
 
 const socket = io(import.meta.env.VITE_SERVER_URL, {
   autoConnect: false,
@@ -25,8 +29,12 @@ export default function RoomPage() {
   const navigate = useNavigate();
   const { roomId } = useParams();
   const [room, setRoom] = useState(null);
-  const [username, setUsername] = useState('');
-  const [showMembers, setShowMembers] = useState(false);
+  // const [username, setUsername] = useState('');
+  const usernameRef = useRef(''); // Add this
+  const [showActiveMembers, setShowActiveMembers] = useState(false);
+  const [activeMembers, setActiveMembers] = useState([]);
+  // const [totalMembers, setTotalMembers] = useState(0);
+  const totalMembersRef = useRef(0); // Add this
   const socketRef = useRef(socket);
   const theme = useTheme();
   const isLargeScreen = useMediaQuery('(min-width:1200px)');
@@ -46,11 +54,16 @@ export default function RoomPage() {
 
 
   useEffect(() => {
+    // console.log("Hi");
     axios
       .get(`${import.meta.env.VITE_SERVER_URL}/api/rooms/getRoom/${roomId}`, {
         withCredentials: true,
       })
-      .then((res) => setRoom(res.data))
+      .then((res) => {setRoom(res.data); 
+        const total = res.data.users.length;
+        // Emit to server: we send both roomId and total
+        socketRef.current.emit('update-total-members', { roomId, total });
+      })
       .catch((err) => console.error('Failed to fetch room:', err));
 
     axios
@@ -58,23 +71,52 @@ export default function RoomPage() {
         withCredentials: true,
       })
       .then((res) => {
+        // console.log('username is: ', res.data.user.username);
         const name = res.data.user.username;
-        setUsername(name);
+        usernameRef.current = name; 
         socketRef.current.connect();
-        socketRef.current.emit('join-room', { roomId, username: name });
+        socketRef.current.emit('enter-room', { roomId, username: name });
       })
       .catch((err) => console.error('Failed to fetch user:', err));
+    
+    socket.on('room-users', (roomUsers) => {
+      setActiveMembers(roomUsers);
+    });
+    // socket.on('user-joined', (joinedUserId) => {
+    //   console.log('User joined:', joinedUserId);
+    // });
 
-    socketRef.current.on('room-deleted', () => {
+    socket.on('total-members-updated', (total)=> totalMembersRef.current = total); // Update the ref with the new total
+   
+    socket.on('room-left', ({leftUsername, totalMembers}) => {
+      console.log('User left:', leftUsername);
+      console.log('username:', usernameRef.current);
+      setActiveMembers(prevMembers => prevMembers.filter(m => m.username !== leftUsername));
+       totalMembersRef.current = totalMembers; // Update the ref with the new total
+      if (leftUsername === usernameRef.current) { 
+        alert('You have left the room successfully!');
+        navigate('/home');
+      } 
+      else {
+        toast.info(`${leftUsername} has left the room.`);
+      }  
+    });
+   
+    socket.on('room-deleted', () => {
       alert('This room has been deleted by the owner.');
       navigate('/home');
     });
 
     return () => {
       socketRef.current.off('room-deleted');
+      socketRef.current.off('code-change');
+      socketRef.current.off('room-users');
+      socketRef.current.off('room-left');
       socketRef.current.disconnect();
     };
-  }, [roomId, navigate]);
+  // }, [roomId, navigate]);
+  }, []);
+
 
   const handleDeleteClick = async () => {
 
@@ -92,16 +134,34 @@ export default function RoomPage() {
     }
   };
 
+  const handleLeaveClick = async () => {
+    console.log("Leaving room...");
+    const confirmLeave = window.confirm('Are you sure you want to permanently leave this room?');
+    if (!confirmLeave) return;
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_SERVER_URL}/api/rooms/leave/${roomId}`,
+        {},
+        { withCredentials: true }
+      );
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
   useEffect(() => {
-    socket.on("code-change", ({ code }) => {
+    socketRef.current.on("code-change", ({ code }) => {
       setCode(code);
     });
   }, []);
 
   return (
+    <>
+    <Navbar/>
     <Box
       sx={{
-        padding: 3,
+        paddingX: 1,
+        paddingY: 3,
         bgcolor: '#1e1e2f',
         minHeight: '100vh',
         color: '#e0e0e0',
@@ -130,12 +190,19 @@ export default function RoomPage() {
             {room?.title || 'Loading Room...'}
           </Typography>
 
-          {room && username === room.owner.username && (
+          {room && usernameRef.current === room.owner.username && (
             <Tooltip title="Delete Room">
               <IconButton color="error" onClick={handleDeleteClick}>
                 <DeleteIcon />
               </IconButton>
             </Tooltip>
+          )}
+          {room && usernameRef.current !== room.owner.username && (
+            <Tooltip title="Leave Group">
+            <IconButton color="warning" onClick={handleLeaveClick}>
+              <LogoutIcon />
+            </IconButton>
+          </Tooltip>
           )}
         </Box>
 
@@ -145,7 +212,7 @@ export default function RoomPage() {
         {!isLargeScreen && (
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
             <button
-              onClick={() => setShowMembers(true)}
+              onClick={() => setShowActiveMembers(true)}
               style={{
                 backgroundColor: '#2e2e44',
                 color: '#e0e0e0',
@@ -155,13 +222,13 @@ export default function RoomPage() {
                 cursor: 'pointer',
               }}
             >
-              👥 View Members
+              👥 View Active Members
             </button>
           </Box>
         )}
 
         {/* Overlay for members on small screen */}
-        {!isLargeScreen && showMembers && (
+        {!isLargeScreen && showActiveMembers && (
           <Box
             sx={{
               position: 'fixed',
@@ -174,7 +241,7 @@ export default function RoomPage() {
               display: 'flex',
               justifyContent: 'flex-start',
             }}
-            onClick={() => setShowMembers(false)} // close when clicked outside
+            onClick={() => setShowActiveMembers(false)} // close when clicked outside
           >
             <Box
               sx={{
@@ -189,16 +256,17 @@ export default function RoomPage() {
               onClick={(e) => e.stopPropagation()} // prevent closing when inside panel
             >
               <Typography variant="subtitle1" gutterBottom color="primary.light">
-                👥 Members
+                👥 Active Members
               </Typography>
-              {room?.users.map((member) => (
+
+              {activeMembers.map((member) => (
                 <Paper
-                  key={member.username}
+                  key={member.socketId} // Changed to socketId because usernames can clash, socketId is unique
                   sx={{
                     p: 1,
                     px: 2,
                     mb: 1,
-                    bgcolor: member.username === username ? '#353553' : '#2e2e44',
+                    bgcolor: member.username === usernameRef.current ? '#353553' : '#2e2e44',
                     color: '#e0e0e0',
                     borderRadius: 2,
                     display: 'flex',
@@ -206,6 +274,7 @@ export default function RoomPage() {
                   }}
                 >
                   <span>{member.username}</span>
+                  {/* You can show crown 👑 if you have a way to check if this active member is owner */}
                   {member.username === room?.owner.username && <span>👑</span>}
                 </Paper>
               ))}
@@ -236,16 +305,16 @@ export default function RoomPage() {
               }}
             >
               <Typography variant="subtitle1" gutterBottom color="primary.light">
-                👥 Members
+                👥 Active Members
               </Typography>
-              {room?.users.map((member) => (
+              {activeMembers.map((member) => (
                 <Paper
-                  key={member.username}
+                  key={member.socketId} // Changed to socketId because usernames can clash, socketId is unique
                   sx={{
                     p: 1,
                     px: 2,
                     mb: 1,
-                    bgcolor: member.username === username ? '#353553' : '#2e2e44',
+                    bgcolor: member.username === usernameRef.current ? '#353553' : '#2e2e44',
                     color: '#e0e0e0',
                     borderRadius: 2,
                     display: 'flex',
@@ -253,6 +322,7 @@ export default function RoomPage() {
                   }}
                 >
                   <span>{member.username}</span>
+                  {/* You can show crown 👑 if you have a way to check if this active member is owner */}
                   {member.username === room?.owner.username && <span>👑</span>}
                 </Paper>
               ))}
@@ -261,8 +331,8 @@ export default function RoomPage() {
 
           {/* Chat Section */}
           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-            {room && username && (
-              <ChatSection roomId={roomId} username={username} />
+            {room && usernameRef.current && (
+              <ChatSection roomId={roomId} username={usernameRef.current} totalUsers={totalMembersRef.current}/>
             )}
           </Box>
         </Box>
@@ -281,5 +351,7 @@ export default function RoomPage() {
         </Box>
       </Paper>
     </Box>
+    <Footer/>
+  </>
   );
 }

@@ -17,6 +17,7 @@ import {
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/authContext'
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import axios from 'axios'
 
 export default function Navbar() {
@@ -41,9 +42,9 @@ export default function Navbar() {
   }
 
   return (
-    <>
-      <AppBar position="static" sx={{ backgroundColor: '#111' }}>
-        <Toolbar sx={{ justifyContent: 'space-between' }}>
+    <div>
+      <AppBar position="static" sx={{ backgroundColor: '#111'}}>
+        <Toolbar sx={{ justifyContent: 'space-between',}}>
           <Typography variant="h6" fontWeight="bold">
             CodeCollab
           </Typography>
@@ -82,6 +83,28 @@ export default function Navbar() {
           </Typography>
 
           <Divider sx={{ bgcolor: 'gray', mb: 2 }} />
+
+           {/* Home Button */}
+            <Button
+              variant="contained"
+              color="primary"
+              fullWidth
+              sx={{
+                textTransform: 'none',
+                fontWeight: 'bold',
+                mb: 2,
+                backgroundColor: '#1976d2',
+                '&:hover': {
+                  backgroundColor: '#1565c0',
+                },
+              }}
+              onClick={() => {
+                navigate('/');
+                setDrawerOpen(false);
+              }}
+            >
+              Home
+            </Button>
 
           {/* Owned Rooms */}
           {user.ownedRooms.length > 0 && <Typography variant="body2" color="primary" fontWeight="bold" gutterBottom>
@@ -159,8 +182,26 @@ export default function Navbar() {
           >
             Logout
           </Button>
+          
+          <IconButton
+              onClick={() => setDrawerOpen(false)}
+              sx={{
+                position: 'absolute',
+                bottom: 16,
+                left: 16,
+                backgroundColor: '#333',
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: '#555',
+                },
+                borderRadius: '50%',
+                boxShadow: '0 2px 5px rgba(0,0,0,0.5)',
+              }}
+            >
+              <ArrowForwardIcon />
+          </IconButton>
         </Box>
       </Drawer>
-    </>
+    </div>
   )
 }

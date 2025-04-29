@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Paper, Typography, TextField, Button, Box, IconButton, InputAdornment } from '@mui/material'
 import { Visibility, VisibilityOff } from '@mui/icons-material'
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 import axios from 'axios'
 const serverUrl = import .meta.env.VITE_SERVER_URL;
@@ -11,6 +12,7 @@ const serverUrl = import .meta.env.VITE_SERVER_URL;
 export default function JoinRoomCard() {
   const [roomDetails, setRoomDetails] = useState({ title: "", passkey: "" });
   const [showPassword, setShowPassword] = useState(false)
+  const navigate = useNavigate();
 
   const handleSubmit = async(e) => {
     e.preventDefault();    
@@ -25,21 +27,14 @@ export default function JoinRoomCard() {
         { withCredentials: true }
       );
       // alert("Room joined successfully!");
-      toast.success('Room joined successfully! ➡️ Click on your profile to view joined rooms.', {
-        position: "top-right",
-        autoClose: 5000, // visible for 5 seconds
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
+      toast.success('Room joined successfully! ➡️ Redirecting...', {
+        position: "top-center",
+        autoClose: 2000,
         theme: "colored",
-        style: {
-          marginRight: '75px', // move it a bit left from right edge
-        },
       });
-
+      
       setRoomDetails({ title: "", passkey: "" });
-
+      navigate(`/room/${joinedRoom.data._id}`); // Redirect to the room page
     }
     catch(error){
        // Handling errors and showing alerts
