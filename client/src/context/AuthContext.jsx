@@ -43,7 +43,8 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     checkAuth()
-  }, [isAuthenticated, user]);
+  // }, [isAuthenticated, user]);
+}, []);
 
   return (
     <AuthContext.Provider value={{
