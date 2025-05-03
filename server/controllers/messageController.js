@@ -1,9 +1,11 @@
 import express from 'express';
 import Message from '../models/Message.js';
+import Room from '../models/Room.js';
+import { io } from '../server.js';
 
 export const saveMessage = async(req, res) =>{
     try {
-        const { content, roomId } = req.body;
+        const { sendername, content, roomId, timeStamp } = req.body;
         const senderId = req.user._id; // protect jwt middleware will populate req.user with the authenticated user.
          
         let fileUrl = null;
@@ -18,7 +20,6 @@ export const saveMessage = async(req, res) =>{
           if (mimeType.includes("image")) fileType = "image";
           else if (mimeType.includes("video")) fileType = "video";
           else if (mimeType.includes("audio")) fileType = "audio";
-          else if (mimeType.includes("pdf")) fileType = "pdf";
         }
     
         const message = await Message.create({
@@ -27,10 +28,20 @@ export const saveMessage = async(req, res) =>{
           content,
           fileUrl,
           fileType,
-        });       
+        }); 
+        await Room.findByIdAndUpdate(roomId, {
+          $push: { messages: message._id }
+        });      
     
         const populatedMsg = await message.populate('sender', 'username');
-        res.status(201).json(populatedMsg);
+        // res.status(201).json(populatedMsg);
+        io.to(roomId).emit('receive-message', { 
+          sender: sendername,
+          content,
+          timeStamp,
+          fileUrl,
+        });
+        return res.status(200).json({success: true, message: populatedMsg});
       } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to send message' });

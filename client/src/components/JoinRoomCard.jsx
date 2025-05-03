@@ -1,23 +1,26 @@
 // src/components/JoinRoomCard.jsx
 import React from 'react'
 import { useState } from 'react';
-import { Paper, Typography, TextField, Button, Box, IconButton, InputAdornment } from '@mui/material'
+import { Paper, Typography, TextField, Button, Box, IconButton, InputAdornment, CircularProgress } from '@mui/material'
 import { Visibility, VisibilityOff } from '@mui/icons-material'
-import { toast } from 'react-toastify';
+import { toast, Slide } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
 import axios from 'axios'
-const serverUrl = import .meta.env.VITE_SERVER_URL;
+const serverUrl = import.meta.env.VITE_SERVER_URL;
 
 export default function JoinRoomCard() {
   const [roomDetails, setRoomDetails] = useState({ title: "", passkey: "" });
   const [showPassword, setShowPassword] = useState(false)
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async(e) => {
-    e.preventDefault();    
+    e.preventDefault();
+    console.log("H1");    
+    setLoading(true); // Start loading
     try{
-      // console.log("Joining start frontend....");
+      console.log("Joining start frontend....");
       const joinedRoom = await axios.post(
         `${serverUrl}/api/rooms/join`,
         {
@@ -26,15 +29,22 @@ export default function JoinRoomCard() {
         },
         { withCredentials: true }
       );
-      // alert("Room joined successfully!");
-      toast.success('Room joined successfully! ➡️ Redirecting...', {
-        position: "top-center",
+      console.log("H2");
+      alert("Room joined successfully!");
+      toast.success('✅ Room joined successfully! ➡️ Redirecting...', {
+        position: "bottom-right",
         autoClose: 2000,
         theme: "colored",
+        transition: Slide,
+        hideProgressBar: false,
+        pauseOnHover: true,
+        draggable: true,
       });
-      
+
+      console.log("H3");
       setRoomDetails({ title: "", passkey: "" });
       navigate(`/room/${joinedRoom.data._id}`); // Redirect to the room page
+      console.log("H4");
     }
     catch(error){
        // Handling errors and showing alerts
@@ -43,6 +53,9 @@ export default function JoinRoomCard() {
       } else {
         alert("An unexpected error occurred.");
       }
+    }
+    finally {
+      setLoading(false); // Stop loading
     }
   };
   
@@ -110,8 +123,9 @@ export default function JoinRoomCard() {
           fullWidth
           onClick={handleSubmit}
           sx={{ mt: 1 }}
+          disabled={loading}
         >
-          Join Room
+          {loading ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Join Room'}
         </Button>
       </Box>
     </Paper>

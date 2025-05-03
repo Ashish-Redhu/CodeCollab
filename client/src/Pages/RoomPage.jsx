@@ -1,16 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import {
-  Box,
-  Typography,
-  Paper,
-  IconButton,
-  Tooltip,
-  Divider,
-  useMediaQuery,
-  useTheme,
-} from '@mui/material';
+import { Box, Typography, Paper, IconButton, Tooltip, Divider, useMediaQuery, useTheme } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ChatSection from '../components/ChatSection';
 import CodingPart from '../components/CodingPart';
@@ -37,7 +28,7 @@ export default function RoomPage() {
   const totalMembersRef = useRef(0); // Add this
   const socketRef = useRef(socket);
   const theme = useTheme();
-  const isLargeScreen = useMediaQuery('(min-width:1200px)');
+  const isLargeScreen = useMediaQuery('(min-width:1100px)');
 
 
   // Code editor related things: 
@@ -48,13 +39,13 @@ export default function RoomPage() {
 
   const handleEditorChange = (value) => {
     setCode(value);
-    socket.emit("code-change", { roomId: roomId, code: value });
+    socketRef.current.emit("code-change", { roomId: roomId, code: value });
   };
 
 
 
   useEffect(() => {
-    // console.log("Hi");
+    console.log("Mounting RoomPage...");
     axios
       .get(`${import.meta.env.VITE_SERVER_URL}/api/rooms/getRoom/${roomId}`, {
         withCredentials: true,
@@ -79,21 +70,19 @@ export default function RoomPage() {
       })
       .catch((err) => console.error('Failed to fetch user:', err));
     
-    socket.on('room-users', (roomUsers) => {
+    socketRef.current.on('room-users', (roomUsers) => {
       setActiveMembers(roomUsers);
     });
-    // socket.on('user-joined', (joinedUserId) => {
-    //   console.log('User joined:', joinedUserId);
-    // });
 
-    socket.on('total-members-updated', (total)=> totalMembersRef.current = total); // Update the ref with the new total
+    socketRef.current.on('total-members-updated', (total)=> totalMembersRef.current = total); // Update the ref with the new total
    
-    socket.on('room-left', ({leftUsername, totalMembers}) => {
+    socketRef.current.on('room-left', ({leftUsername, totalMembers}) => {
       console.log('User left:', leftUsername);
       console.log('username:', usernameRef.current);
       setActiveMembers(prevMembers => prevMembers.filter(m => m.username !== leftUsername));
-       totalMembersRef.current = totalMembers; // Update the ref with the new total
+      totalMembersRef.current = totalMembers; // Update the ref with the new total
       if (leftUsername === usernameRef.current) { 
+        
         alert('You have left the room successfully!');
         navigate('/home');
       } 
@@ -102,12 +91,13 @@ export default function RoomPage() {
       }  
     });
    
-    socket.on('room-deleted', () => {
+    socketRef.current.on('room-deleted', () => {
       alert('This room has been deleted by the owner.');
       navigate('/home');
     });
 
     return () => {
+      console.log("Unmounting RoomPage...");
       socketRef.current.off('room-deleted');
       socketRef.current.off('code-change');
       socketRef.current.off('room-users');
@@ -115,7 +105,7 @@ export default function RoomPage() {
       socketRef.current.disconnect();
     };
   // }, [roomId, navigate]);
-  }, []);
+  }, [roomId, navigate]); // We are using it because we want to run useEffect again when userMoves to a different room on same page.
 
 
   const handleDeleteClick = async () => {
@@ -332,7 +322,7 @@ export default function RoomPage() {
           {/* Chat Section */}
           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
             {room && usernameRef.current && (
-              <ChatSection roomId={roomId} username={usernameRef.current} totalUsers={totalMembersRef.current}/>
+              <ChatSection roomId={roomId} username={usernameRef.current} totalUsers={totalMembersRef.current} socket={socketRef.current}/>
             )}
           </Box>
         </Box>

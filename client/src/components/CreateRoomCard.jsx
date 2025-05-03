@@ -3,7 +3,7 @@ import React from 'react'
 import { useState } from 'react';
 import { Paper, Typography, TextField, Button, Box, IconButton, InputAdornment } from '@mui/material'
 import { Visibility, VisibilityOff } from '@mui/icons-material'
-import { toast } from 'react-toastify';
+import { toast, Slide } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 const serverUrl = import .meta.env.VITE_SERVER_URL;
 import axios from 'axios'
@@ -32,10 +32,19 @@ export default function CreateRoomCard() {
 
       console.log(newRoom);
       // alert("Room created successfully!");
-      toast.success('Room created successfully! ➡️ Redirecting...', {
-        position: "top-center",
-        autoClose: 3000,
+      // toast.success('Room created successfully! ➡️ Redirecting...', {
+      //   position: "top-center",
+      //   autoClose: 2000,
+      //   theme: "colored",
+      // });
+      toast.success('✅ Room created successfully! ➡️ Redirecting...', {
+        position: "bottom-right",
+        autoClose: 2000,
         theme: "colored",
+        transition: Slide,
+        hideProgressBar: false,
+        pauseOnHover: true,
+        draggable: true,
       });
 
       setRoomDetails({ title: "", passkey: "", });

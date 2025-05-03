@@ -1,28 +1,18 @@
 // components/chat/ChatSection.jsx
 import { useState, useEffect, useRef } from 'react';
-import { 
-  Box, 
-  Typography, 
-  TextField, 
-  Button, 
-  IconButton, 
-  Paper, 
-  Avatar,
-  Badge,
-  Tooltip
-} from '@mui/material';
+import { Box, Typography, TextField, Button, IconButton, Paper, Avatar,Badge,Tooltip } from '@mui/material';
 import { Send, AttachFile, Close } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
 import Message from './Message';
 import axios from 'axios';
-import io from 'socket.io-client';
+import { io } from 'socket.io-client';
 
-const socket = io(import.meta.env.VITE_SERVER_URL, {
-  autoConnect: false,
-  withCredentials: true,
-});
+// const socket = io(import.meta.env.VITE_SERVER_URL, {
+//   autoConnect: false,
+//   withCredentials: true,
+// });
 
-export default function ChatSection({ roomId, username, totalUsers }) {
+export default function ChatSection({ roomId, username, totalUsers, socket }) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef(null);
@@ -30,17 +20,21 @@ export default function ChatSection({ roomId, username, totalUsers }) {
   const [isTyping, setIsTyping] = useState(false);
 
   useEffect(() => {
-    const fetchMessages = async () => {
-      try {
-        const messagesRes = await axios.get(`${import.meta.env.VITE_SERVER_URL}/api/messages/${roomId}`, { 
-          withCredentials: true 
-        });
-        const formattedMsgs = messagesRes.data.map(msg => ({
-          sender: msg.sender.username,
-          content: msg.content,
-          fileUrl: msg.fileUrl, 
-          timeStamp: msg.timeStamp,
-        }));
+    
+    if(socket){
+      socket.connect();
+      console.log("C1 - Socket in chat section");
+      const fetchMessages = async () => {
+        try {
+          const messagesRes = await axios.get(`${import.meta.env.VITE_SERVER_URL}/api/messages/${roomId}`, { 
+            withCredentials: true 
+          });
+          const formattedMsgs = messagesRes.data.map(msg => ({
+            sender: msg.sender.username,
+            content: msg.content,
+            fileUrl: msg.fileUrl, 
+            timeStamp: msg.timeStamp,
+          }));
         setMessages(formattedMsgs);
       } catch (err) {
         console.error('Failed to fetch messages:', err);
@@ -48,27 +42,16 @@ export default function ChatSection({ roomId, username, totalUsers }) {
     };
     fetchMessages();
 
-    // socket.connect();
-    // socket.emit('join-room', { roomId, username });
-    
     socket.on('receive-message', (message) => {
       setMessages((prev) => [...prev, message]);
     });
 
-    // socket.on('room-users', (roomUsers) => {
-    //   setUsers(roomUsers);
-    // });
-
-    socket.on('typing', ({ isTyping }) => {
-      setIsTyping(isTyping);
-    });
 
     return () => {
       socket.off('receive-message');
-      socket.off('room-users');
-      socket.off('typing');
       socket.disconnect();
     };
+  }
   }, [roomId, username]);
 
   useEffect(() => {
@@ -80,73 +63,33 @@ export default function ChatSection({ roomId, username, totalUsers }) {
     setFile(e.target.files[0]);
   };
 
-  const handleTyping = () => {
-    socket.emit('typing', { roomId, isTyping: newMessage.length > 0 });
-  };
-
   const sendMessage = () => {
     if (!newMessage.trim() && !file) return;
+    if (!socket || !socket.connected) {console.log("No socket connection in chat-component"); return;}
 
-    const messageData = {
-      sendername: username,
-      content: newMessage,
-      roomId,
-      timeStamp: new Date().toISOString(),
-    };
+    const formData = new FormData();
+    formData.append('sendername', username);
+    formData.append('content', newMessage); // Include text content always
+    formData.append('roomId', roomId);
+    formData.append('timeStamp', new Date().toISOString());
 
     if (file) {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('roomId', roomId);
-      formData.append('sendername', username);
-
-      axios.post(`${import.meta.env.VITE_SERVER_URL}/api/messages/save`, formData, {
-        withCredentials: true, 
-      }).then((res) => {
-        const {sender, content, fileUrl, timeStamp} = res.data; 
-        socket.emit('send-message', { 
-          sendername: sender.username, 
-          content, 
-          fileUrl, 
-          roomId, 
-          timeStamp 
-        });
-      }).catch((err) => {
-        console.error('Upload Error:', err);
-      });
-    } else {
-      socket.emit('send-message', messageData);
+      formData.append('file', file); // Include file if present
     }
+
+    axios.post(`${import.meta.env.VITE_SERVER_URL}/api/messages/save`, formData, {withCredentials: true})
+      .catch((err)=>{
+        console.error('Message send error:', err);
+      });
 
     setNewMessage('');
     setFile(null);
-    socket.emit('typing', { roomId, isTyping: false });
   };
 
   return (
-    <Paper 
-      sx={{ 
-        display: 'flex',
-        flexDirection: 'column',
-        height: '80vh',
-        padding: 0,
-        backgroundColor: '#121212',
-        color: '#e0e0e0',
-        borderRadius: '12px',
-        overflow: 'hidden',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-      }} 
-      elevation={0}
-    >
+    <Paper sx={{ display: 'flex', flexDirection: 'column', height: '80vh', padding: 0, backgroundColor: '#121212', color: '#e0e0e0', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'}} elevation={0}>
       {/* Header */}
-      <Box sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '16px',
-        backgroundColor: '#1e1e1e',
-        borderBottom: '1px solid #2e2e2e',
-      }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', backgroundColor: '#1e1e1e', borderBottom: '1px solid #2e2e2e'}}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Typography variant="h6" sx={{ 
             fontWeight: 600,
@@ -186,10 +129,7 @@ export default function ChatSection({ roomId, username, totalUsers }) {
 
       {/* Messages container */}
       <Box 
-        sx={{ 
-          flex: 1,
-          overflowY: 'auto',
-          padding: '16px',
+        sx={{ flex: 1, overflowY: 'auto', padding: '16px',
           '&::-webkit-scrollbar': {
             width: '8px',
           },
@@ -269,11 +209,7 @@ export default function ChatSection({ roomId, username, totalUsers }) {
       </Box>
 
       {/* Input area */}
-      <Box sx={{ 
-        padding: '16px',
-        backgroundColor: '#1e1e1e',
-        borderTop: '1px solid #2e2e2e',
-      }}>
+      <Box sx={{ padding: '16px',backgroundColor: '#1e1e1e',borderTop: '1px solid #2e2e2e'}}>
         {file && (
           <Box sx={{
             display: 'flex',
@@ -313,7 +249,7 @@ export default function ChatSection({ roomId, username, totalUsers }) {
                 type="file"
                 hidden
                 onChange={handleFileChange}
-                accept="image/*,audio/*,video/*,.pdf"
+                accept="image/*,audio/*,video/*"
               />
             </IconButton>
           </Tooltip>
