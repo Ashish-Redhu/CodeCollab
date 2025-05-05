@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './Pages/LandingPage.jsx';
-import Home from './pages/Home.jsx';
-import Login from './pages/Auth/Login.jsx';
-import Register from './pages/Auth/Register.jsx';
-import RoomPage from './pages/RoomPage.jsx'; 
+import Home from './Pages/Home.jsx';
+import Login from './Pages/Auth/Login.jsx';
+import Register from './Pages/Auth/Register.jsx';
+import RoomPage from './Pages/RoomPage.jsx'; 
 import { useAuth } from './context/AuthContext.jsx';
 import './App.css';
 import { CircularProgress, Box } from '@mui/material'; // Import loading indicator
