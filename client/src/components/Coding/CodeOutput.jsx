@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
-
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
 import axios from 'axios';
 
 function CodeOutput({ value, language, codeOutput, handleCodeOutputChange, codeRunning, handleCodeRunningChange }) {
@@ -13,82 +13,110 @@ function CodeOutput({ value, language, codeOutput, handleCodeOutputChange, codeR
        java: "15.0.2",
        cpp: "11.2.0",
     };
-    // const [output, setOutput] = useState('');
-    // const [isLoading, setIsLoading] = useState(false);
 
     const handleRun = async () => {
-
-        handleCodeRunningChange(true); // Start loading
-        // setIsLoading(true); // Start loading
-        console.log("Running code...");
+        handleCodeRunningChange(true);
         
-        const languageVersion = languageVersionMap[language]; // Default to language if version not mapped
+        const languageVersion = languageVersionMap[language];
 
         const requestData = {
             "language": language,
             "version": languageVersion,
-            "files":[
-                {
-                    "content": value,
-                }
-            ]
+            "files": [{
+                "content": value,
+            }]
         };
 
         try {
-            // const response = await axios.get(PISTON_API_URL, requestData);
             const response = await axios.post(`${SERVER_URL}/run-code`, requestData);
-            // console.log(response.data.run);
             const result = response.data.run;
             handleCodeOutputChange(result.stdout || result.stderr || 'No output returned');
-            // setOutput(result.stdout || result.stderr || 'No output returned');
         } catch (error) {
             const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
-            console.error('Error executing code:', errorMessage);
             handleCodeOutputChange(`Error: ${errorMessage}`);
-        }
-        finally{
+        } finally {
             handleCodeRunningChange(false);
-            // setIsLoading(false); // End loading
         }
     };
 
     return (
-        <div style={{
-            color: "white",
-            height: "100%",
-            overflowY: "auto"
+        <Box sx={{ 
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            backgroundColor: '#1a1a1a',
+            // bgcolor: '#1e1e2f',
         }}>
-            <Button 
-                variant="contained" 
-                color="success" 
-                style={{
-                    position: "relative",
-                    top: "25px",
-                    cursor: "pointer",
-                }}
-                onClick={handleRun}
-                disabled={codeRunning} // Disable button while loading
-            >
-               {codeRunning ? <CircularProgress size={24} color="inherit" /> : 'Run Code'}
+            <Box sx={{ 
+                padding: '16px',
+                borderBottom: '1px solid #2d2d2d',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                backgroundColor: '#252526'
+            }}>
+                <Button 
+                    variant="contained" 
+                    color="primary"
+                    size="medium"
+                    onClick={handleRun}
+                    disabled={codeRunning}
+                    sx={{
+                        minWidth: '120px',
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        backgroundColor: '#007acc',
+                        '&:hover': {
+                            backgroundColor: '#0062a3',
+                        },
+                        '&:disabled': {
+                            backgroundColor: '#3e3e42',
+                            color: '#6e6e6e'
+                        }
+                    }}
+                >
+                    {codeRunning ? (
+                        <CircularProgress size={24} color="inherit" />
+                    ) : (
+                        'Run Code'
+                    )}
+                </Button>
+            </Box>
 
-            </Button>
-
-            <div>
-                <h2 style={{ textAlign: "center", marginTop: "20px" }}>Output</h2>
-                <div style={{
-                    backgroundColor: "#1f1f33",
-                    padding: "20px",
-                    borderRadius: "10px",
-                    height: "80vh",
-                    overflowY: "auto",
-                    color: "#e0e0e0",
-                    fontFamily: "'Fira Code', 'Consolas', 'Courier New', monospace",
+            <Box sx={{ 
+                padding: '16px',
+                flex: 1,
+                overflow: 'auto'
+            }}>
+                <Typography variant="h6" sx={{ 
+                    marginBottom: '16px',
+                    color: '#ffffff',
+                    fontWeight: 600
                 }}>
-                    {/* Output will be displayed here */}
-                    <pre>{codeOutput}</pre>
-                </div>
-            </div>
-        </div>
+                    Output
+                </Typography>
+                <Box sx={{
+                    backgroundColor: '#1e1e1e',
+                    padding: '16px',
+                    borderRadius: '4px',
+                    height: 'calc(100% - 40px)',
+                    overflow: 'auto',
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: '14px',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    border: '1px solid #2d2d2d',
+                    color: codeOutput?.startsWith('Error:') ? 
+                        '#f48771' : 
+                        '#d4d4d4'
+                }}>
+                    {codeOutput || (
+                      <Typography variant="body2" sx={{ color: '#858585' }}>
+                        Click "Run Code" to see the output here
+                      </Typography>
+                    )}
+                </Box>
+            </Box>
+        </Box>
     );
 }
 
