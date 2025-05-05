@@ -1,9 +1,9 @@
 import React from 'react'
 import { Box, Container, Grid, Divider } from '@mui/material'
-import Navbar from '../components/Shared/Navbar'
-import Footer from '../components/Shared/Footer'
-import JoinRoomCard from '../components/JoinRoomCard'
-import CreateRoomCard from '../components/CreateRoomCard'
+import Navbar from '../components/Shared/Navbar.jsx'
+import Footer from '../components/Shared/Footer.jsx'
+import JoinRoomCard from '../components/JoinRoomCard.jsx'
+import CreateRoomCard from '../components/CreateRoomCard.jsx'
 
 export default function Home() {
   return (

@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Box, Typography, TextField, Button, IconButton, Paper, Avatar,Badge,Tooltip } from '@mui/material';
 import { Send, AttachFile, Close } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
-import Message from './Message';
+import Message from './Message.jsx';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 

@@ -5,7 +5,7 @@ import { Paper, Typography, TextField, Button, Box, IconButton, InputAdornment }
 import { Visibility, VisibilityOff } from '@mui/icons-material'
 import { toast, Slide } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext.jsx';
 const serverUrl = import .meta.env.VITE_SERVER_URL;
 import axios from 'axios'
 

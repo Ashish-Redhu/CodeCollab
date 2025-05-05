@@ -1,7 +1,7 @@
 import { AppBar, Toolbar, Typography, IconButton, Avatar, Drawer, Box, Divider, List, ListItem, ListItemText, useTheme, useMediaQuery, Button } from '@mui/material'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { useAuth } from '../../context/AuthContext.jsx'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import axios from 'axios'
 

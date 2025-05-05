@@ -3,14 +3,14 @@ import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Box, Typography, Paper, IconButton, Tooltip, Divider, useMediaQuery, useTheme } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import ChatSection from '../components/Chatting/ChatSection';
-import CodingPart from '../components/Coding/CodingPart';
-import Navbar from '../components/Shared/Navbar'
-import Footer from '../components/Shared/Footer'
+import ChatSection from '../components/Chatting/ChatSection.jsx';
+import CodingPart from '../components/Coding/CodingPart.jsx';
+import Navbar from '../components/Shared/Navbar.jsx'
+import Footer from '../components/Shared/Footer.jsx'
 import { io } from 'socket.io-client';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { toast } from 'react-toastify';
-import { useAuth } from '../context/AuthContext'; 
+import { useAuth } from '../context/AuthContext.jsx'; 
 
 const socket = io(import.meta.env.VITE_SERVER_URL, {
   autoConnect: false,
