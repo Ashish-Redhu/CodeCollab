@@ -155,7 +155,7 @@ export default function Register() {
               }
               sx={{ mt: 1, color: '#fff', borderColor: '#fff' }}
             >
-              Create Room
+              Register
             </Button>
               <Typography variant="body2" sx={{ color: '#aaa' }}>
                 Already have an account?{' '}

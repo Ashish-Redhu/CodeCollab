@@ -19,7 +19,7 @@ export const registerUser = async (req, res) => {
     const user = await User.create({ username, email, password });
 
     const token = generateToken(user);
-    res.cookie('token', token, { httpOnly: true }).json({ message: 'User registered' });
+    res.cookie('token', token, { httpOnly: true, secure: true, sameSite: "None", }).json({ message: 'User registered' });
 
   } catch (error) {
     console.error('Register Error:', error);
@@ -37,7 +37,7 @@ export const loginUser = async (req, res) => {
     }
 
     const token = generateToken(user);
-    res.cookie('token', token, { httpOnly: true }).json({ message: 'Login successful' });
+    res.cookie('token', token, { httpOnly: true, secure: true, sameSite: "None", }).json({ message: 'Login successful' });
 
   } catch (error) {
     console.error('Login Error:', error);
