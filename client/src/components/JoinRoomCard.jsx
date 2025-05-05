@@ -5,6 +5,7 @@ import { Paper, Typography, TextField, Button, Box, IconButton, InputAdornment, 
 import { Visibility, VisibilityOff } from '@mui/icons-material'
 import { toast, Slide } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 import axios from 'axios'
 const serverUrl = import.meta.env.VITE_SERVER_URL;
@@ -14,6 +15,7 @@ export default function JoinRoomCard() {
   const [showPassword, setShowPassword] = useState(false)
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const { checkAuth } = useAuth();
 
   const handleSubmit = async(e) => {
     e.preventDefault();
@@ -45,6 +47,7 @@ export default function JoinRoomCard() {
       setRoomDetails({ title: "", passkey: "" });
       navigate(`/room/${joinedRoom.data._id}`); // Redirect to the room page
       console.log("H4");
+      await checkAuth();
     }
     catch(error){
        // Handling errors and showing alerts

@@ -3,13 +3,14 @@ import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Box, Typography, Paper, IconButton, Tooltip, Divider, useMediaQuery, useTheme } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import ChatSection from '../components/ChatSection';
-import CodingPart from '../components/CodingPart';
-import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
+import ChatSection from '../components/Chatting/ChatSection';
+import CodingPart from '../components/Coding/CodingPart';
+import Navbar from '../components/Shared/Navbar'
+import Footer from '../components/Shared/Footer'
 import { io } from 'socket.io-client';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { toast } from 'react-toastify';
+import { useAuth } from '../context/AuthContext'; 
 
 const socket = io(import.meta.env.VITE_SERVER_URL, {
   autoConnect: false,
@@ -24,16 +25,19 @@ export default function RoomPage() {
   const usernameRef = useRef(''); // Add this
   const [showActiveMembers, setShowActiveMembers] = useState(false);
   const [activeMembers, setActiveMembers] = useState([]);
-  // const [totalMembers, setTotalMembers] = useState(0);
-  const totalMembersRef = useRef(0); // Add this
+  const [totalMembers, setTotalMembers] = useState(0);
+  // const totalMembersRef = useRef(0); // Add this
   const socketRef = useRef(socket);
   const theme = useTheme();
   const isLargeScreen = useMediaQuery('(min-width:1100px)');
 
+  const {checkAuth} = useAuth(); // Import checkAuth from AuthContext
 
   // Code editor related things: 
   const [code, setCode] = useState("// Write your code here...");
   const [language, setLanguage] = useState('java');
+  const [codeOutput, setCodeOutput] = useState('');
+  const [codeRunning, setCodeRunning] = useState(false);
 
   const editorRef = useRef(null);
 
@@ -41,7 +45,20 @@ export default function RoomPage() {
     setCode(value);
     socketRef.current.emit("code-change", { roomId: roomId, code: value });
   };
+  const handleLanguageChange = (event) =>{
+    setLanguage(event.target.value);
+    socketRef.current.emit("language-change", { roomId: roomId, language: event.target.value });
+  }
 
+  const handleCodeOutputChange = (output) => {
+    setCodeOutput(output);
+    socketRef.current.emit("code-output-change", { roomId: roomId, codeOutput: output });
+  }
+
+  const handleCodeRunningChange = (running) => {
+    setCodeRunning(running);    
+    socketRef.current.emit("code-running-change", { roomId: roomId, codeRunning: running });
+  }
 
 
   useEffect(() => {
@@ -52,6 +69,7 @@ export default function RoomPage() {
       })
       .then((res) => {setRoom(res.data); 
         const total = res.data.users.length;
+        setTotalMembers(total);
         // Emit to server: we send both roomId and total
         socketRef.current.emit('update-total-members', { roomId, total });
       })
@@ -74,13 +92,13 @@ export default function RoomPage() {
       setActiveMembers(roomUsers);
     });
 
-    socketRef.current.on('total-members-updated', (total)=> totalMembersRef.current = total); // Update the ref with the new total
+    socketRef.current.on('total-members-updated', (total)=> setTotalMembers(total)); // Update the ref with the new total
    
     socketRef.current.on('room-left', ({leftUsername, totalMembers}) => {
       console.log('User left:', leftUsername);
       console.log('username:', usernameRef.current);
       setActiveMembers(prevMembers => prevMembers.filter(m => m.username !== leftUsername));
-      totalMembersRef.current = totalMembers; // Update the ref with the new total
+      setTotalMembers(totalMembers); // Update the ref with the new total
       if (leftUsername === usernameRef.current) { 
         
         alert('You have left the room successfully!');
@@ -119,6 +137,7 @@ export default function RoomPage() {
         {},
         { withCredentials: true }
       );
+      await checkAuth();
     } catch (err) {
       alert(err.message);
     }
@@ -134,6 +153,7 @@ export default function RoomPage() {
         {},
         { withCredentials: true }
       );
+      await checkAuth();
     } catch (err) {
       alert(err.message);
     }
@@ -143,6 +163,21 @@ export default function RoomPage() {
     socketRef.current.on("code-change", ({ code }) => {
       setCode(code);
     });
+    socketRef.current.on("language-change", ({ language }) => {
+      setLanguage(language);
+    });
+    socketRef.current.on("code-output-change", ({ codeOutput }) => {
+      setCodeOutput(codeOutput);
+    });
+    socketRef.current.on("code-running-change", ({ codeRunning }) => {
+      setCodeRunning(codeRunning);
+    });
+    return () => {
+      socketRef.current.off("code-change");
+      socketRef.current.off("language-change");
+      socketRef.current.off("code-output-change");
+      socketRef.current.off("code-running-change");
+    };
   }, []);
 
   return (
@@ -150,7 +185,6 @@ export default function RoomPage() {
     <Navbar/>
     <Box
       sx={{
-        paddingX: 1,
         paddingY: 3,
         bgcolor: '#1e1e2f',
         minHeight: '100vh',
@@ -161,8 +195,8 @@ export default function RoomPage() {
         elevation={4}
         sx={{
           p: 3,
-          borderRadius: 3,
-          maxWidth: isLargeScreen ? '95%' : '100%',
+          // borderRadius: 3,
+          maxWidth: '100%',
           margin: 'auto',
           bgcolor: '#2a2a40',
           color: '#e0e0e0',
@@ -322,7 +356,7 @@ export default function RoomPage() {
           {/* Chat Section */}
           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
             {room && usernameRef.current && (
-              <ChatSection roomId={roomId} username={usernameRef.current} totalUsers={totalMembersRef.current} socket={socketRef.current}/>
+              <ChatSection roomId={roomId} username={usernameRef.current} totalUsers={totalMembers} socket={socketRef.current}/>
             )}
           </Box>
         </Box>
@@ -336,7 +370,7 @@ export default function RoomPage() {
             <Typography color="gray">
               This feature will let you collaborate on code in real time!
             </Typography>
-            <CodingPart value={code} onChange={handleEditorChange} language={language} setLanguage={setLanguage}/>
+            <CodingPart value={code} onChange={handleEditorChange} language={language} handleLanguageChange={handleLanguageChange} codeOutput={codeOutput} handleCodeOutputChange={handleCodeOutputChange} codeRunning={codeRunning} handleCodeRunningChange={handleCodeRunningChange}/>
           </Paper>
         </Box>
       </Paper>

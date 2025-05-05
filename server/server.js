@@ -53,6 +53,20 @@ io.on('connection', (socket) => {
     socket.to(roomId).emit("code-change", { code });
   });
 
+  socket.on("language-change", ({ roomId, language }) => {
+    socket.to(roomId).emit("language-change", { language });
+  });
+
+  socket.on("code-output-change", ({ roomId, codeOutput }) => {
+    console.log("codeOutput", codeOutput);
+    socket.to(roomId).emit("code-output-change", { codeOutput });
+  });
+
+  socket.on("code-running-change", ({ roomId, codeRunning }) => {
+    console.log("codeRunning", codeRunning);
+    socket.to(roomId).emit("code-running-change", { codeRunning });
+  });
+
   socket.on('send-message', async({sendername, content, roomId, timeStamp, fileUrl}) => {
     try{
 

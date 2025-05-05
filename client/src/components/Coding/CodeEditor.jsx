@@ -5,10 +5,7 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 
-function CodeEditor({value, onChange, language, setLanguage}) {
-  const handleLanguageChange = (event)=>{
-    setLanguage(event.target.value);
-  }
+function CodeEditor({value, onChange, language, handleLanguageChange}) {
   return (
     <>
      <FormControl sx={{ m: 1, minWidth: 150, color: "white", padding: "8px", borderBottom: "1px solid #333",  position: "relative", top: "10px", borderBottom: "1px solid #333"}}>

@@ -1,7 +1,7 @@
 import React from 'react'
 import { Box, Container, Grid, Divider } from '@mui/material'
-import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
+import Navbar from '../components/Shared/Navbar'
+import Footer from '../components/Shared/Footer'
 import JoinRoomCard from '../components/JoinRoomCard'
 import CreateRoomCard from '../components/CreateRoomCard'
 

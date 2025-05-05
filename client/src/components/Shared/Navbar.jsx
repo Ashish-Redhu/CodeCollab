@@ -1,22 +1,7 @@
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  IconButton,
-  Avatar,
-  Drawer,
-  Box,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
-  useTheme,
-  useMediaQuery,
-  Button,
-} from '@mui/material'
+import { AppBar, Toolbar, Typography, IconButton, Avatar, Drawer, Box, Divider, List, ListItem, ListItemText, useTheme, useMediaQuery, Button } from '@mui/material'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/authContext'
+import { useAuth } from '../../context/AuthContext'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import axios from 'axios'
 
@@ -27,6 +12,8 @@ export default function Navbar() {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
+  const {checkAuth} = useAuth();
+
   const handleLogout = async () => {
     try {
       await axios.get(`${import.meta.env.VITE_SERVER_URL}/api/auth/logout`, {
@@ -34,6 +21,7 @@ export default function Navbar() {
       })
       setIsAuthenticated(false)
       navigate('/')
+      await checkAuth();
     } catch (err) {
       console.error('Logout failed:', err)
     } finally {

@@ -1,8 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './Pages/LandingPage';
 import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import Login from './pages/Auth/Login';
+import Register from './pages/Auth/Register';
 import RoomPage from './pages/RoomPage'; 
 import { useAuth } from './context/AuthContext';
 import './App.css';

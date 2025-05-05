@@ -4,10 +4,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 import axios from 'axios';
 
-// Define the API endpoint for Piston
-const PISTON_API_URL = "https://emkc.org/api/v2/piston/execute";
-
-function CodeOutput({ value, language }) {
+function CodeOutput({ value, language, codeOutput, handleCodeOutputChange, codeRunning, handleCodeRunningChange }) {
     const SERVER_URL = import.meta.env.VITE_SERVER_URL; 
 
     const languageVersionMap = {
@@ -16,11 +13,13 @@ function CodeOutput({ value, language }) {
        java: "15.0.2",
        cpp: "11.2.0",
     };
-    const [output, setOutput] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+    // const [output, setOutput] = useState('');
+    // const [isLoading, setIsLoading] = useState(false);
 
     const handleRun = async () => {
-        setIsLoading(true); // Start loading
+
+        handleCodeRunningChange(true); // Start loading
+        // setIsLoading(true); // Start loading
         console.log("Running code...");
         
         const languageVersion = languageVersionMap[language]; // Default to language if version not mapped
@@ -38,16 +37,18 @@ function CodeOutput({ value, language }) {
         try {
             // const response = await axios.get(PISTON_API_URL, requestData);
             const response = await axios.post(`${SERVER_URL}/run-code`, requestData);
-            console.log(response.data.run);
+            // console.log(response.data.run);
             const result = response.data.run;
-            setOutput(result.stdout || result.stderr || 'No output returned');
+            handleCodeOutputChange(result.stdout || result.stderr || 'No output returned');
+            // setOutput(result.stdout || result.stderr || 'No output returned');
         } catch (error) {
             const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
             console.error('Error executing code:', errorMessage);
-            setOutput(`Error: ${errorMessage}`);
+            handleCodeOutputChange(`Error: ${errorMessage}`);
         }
         finally{
-            setIsLoading(false); // End loading
+            handleCodeRunningChange(false);
+            // setIsLoading(false); // End loading
         }
     };
 
@@ -66,9 +67,9 @@ function CodeOutput({ value, language }) {
                     cursor: "pointer",
                 }}
                 onClick={handleRun}
-                disabled={isLoading} // Disable button while loading
+                disabled={codeRunning} // Disable button while loading
             >
-               {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Run Code'}
+               {codeRunning ? <CircularProgress size={24} color="inherit" /> : 'Run Code'}
 
             </Button>
 
@@ -84,7 +85,7 @@ function CodeOutput({ value, language }) {
                     fontFamily: "'Fira Code', 'Consolas', 'Courier New', monospace",
                 }}>
                     {/* Output will be displayed here */}
-                    <pre>{output}</pre>
+                    <pre>{codeOutput}</pre>
                 </div>
             </div>
         </div>

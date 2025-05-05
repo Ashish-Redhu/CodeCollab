@@ -5,7 +5,7 @@ import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { Link as RouterLink } from 'react-router-dom'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { useAuth } from '../context/authContext'
+import { useAuth } from '../../context/authContext'
 
 export default function Register() {
   const [username, setUsername] = useState('')

@@ -5,6 +5,7 @@ import { Paper, Typography, TextField, Button, Box, IconButton, InputAdornment }
 import { Visibility, VisibilityOff } from '@mui/icons-material'
 import { toast, Slide } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 const serverUrl = import .meta.env.VITE_SERVER_URL;
 import axios from 'axios'
 
@@ -14,7 +15,7 @@ export default function CreateRoomCard() {
   const [showPassword, setShowPassword] = useState(false)
   const [confirmPasskey, setConfirmPasskey] = useState("");
   const navigate = useNavigate();
-
+  const { checkAuth } = useAuth()
 
   const handleSubmit = async(e) => {
     e.preventDefault();
@@ -29,14 +30,8 @@ export default function CreateRoomCard() {
         },
         { withCredentials: true }
       );
-
-      console.log(newRoom);
-      // alert("Room created successfully!");
-      // toast.success('Room created successfully! ➡️ Redirecting...', {
-      //   position: "top-center",
-      //   autoClose: 2000,
-      //   theme: "colored",
-      // });
+      await checkAuth()
+      // console.log(newRoom);
       toast.success('✅ Room created successfully! ➡️ Redirecting...', {
         position: "bottom-right",
         autoClose: 2000,
