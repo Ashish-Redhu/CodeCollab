@@ -36,6 +36,14 @@ const userSchema = new mongoose.Schema({
             ref: "Room",
         },
     ],
+
+    // this is used for password reset functionality.
+    resetToken: {
+        type: String,
+    },
+    resetTokenExpires: {
+        type: Date,
+    },
 }, 
 // the below one is an optional field that automatically adds two fields in the schema i) createdAt ii) updatedAt.
     {

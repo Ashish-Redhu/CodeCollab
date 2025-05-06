@@ -1,5 +1,7 @@
 import User from '../models/User.js'
 import jwt from 'jsonwebtoken'
+import crypto from 'crypto' // To generate secure tokens
+import nodemailer from 'nodemailer'
 
 const generateToken = (user) => {
   return jwt.sign(
@@ -118,6 +120,75 @@ export const checkAuth = async (req, res) => {
     return res.status(401).json({ authenticated: false, message: 'Invalid token' });
   }
 };
+
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body
+  try {
+    const user = await User.findOne({ email })
+    if (!user) return res.status(404).json({ message: 'User not found' })
+
+    // Generate a reset token
+    const token = crypto.randomBytes(32).toString('hex')
+    user.resetToken = token
+    user.resetTokenExpires = Date.now() + 10 * 60 * 1000 // 1 hour
+    await user.save()
+
+    // Send email
+    const transporter = nodemailer.createTransport({
+      service: 'Gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    })
+
+    const resetLink = `${process.env.CLIENT_URL}/reset-password?token=${token}&email=${email}`
+
+    await transporter.sendMail({
+      to: user.email,
+      subject: 'Password Reset',
+      html: `<p>Click <a href="${resetLink}">here</a> to reset your password. This link expires in next 10 minutes.</p>`,
+    })
+
+    res.json({ message: 'Reset link sent to your email.' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Server error' })
+  }
+}
+
+export const resetPassword = async (req, res) => {
+  const { email, newPassword, token } = req.body
+  try {
+
+    const user = await User.findOne({
+      email,
+      resetToken: token,
+      resetTokenExpires: { $gt: Date.now() }, // check if token is still valid
+    })
+
+    console.log("xx1");
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired token' })
+    }
+    console.log("xx2");
+    console.log(user);
+
+    user.password = newPassword
+    user.resetToken = undefined
+    user.resetTokenExpires = undefined
+    console.log("xx3");
+    await user.save()
+    console.log("xx4");
+
+    res.json({ message: 'Password reset successfully' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: 'Server error' })
+  }
+}
+
 
 
 // For OAuth2.0 authentication with Google and GitHub

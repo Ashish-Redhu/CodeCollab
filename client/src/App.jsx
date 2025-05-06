@@ -4,11 +4,13 @@ import Home from './Pages/Home.jsx';
 import Login from './Pages/Auth/Login.jsx';
 import Register from './Pages/Auth/Register.jsx';
 import RoomPage from './Pages/RoomPage.jsx'; 
+import ResetUserPass from './Pages/Auth/ResetUserPass.jsx';
 import { useAuth } from './context/AuthContext.jsx';
 import './App.css';
 import { CircularProgress, Box } from '@mui/material'; // Import loading indicator
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
 
 function App() {
     const { isAuthenticated, loading } = useAuth();
@@ -36,6 +38,7 @@ function App() {
                 <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/home" />} />
                 <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to="/home" />} />
                 <Route path="/home" element={isAuthenticated ? <Home /> : <Navigate to="/" />} />
+                <Route path="/reset-password" element={<ResetUserPass />} />
                 <Route path="/room/:roomId" element={isAuthenticated ? <RoomPage /> : <Navigate to="/login" />} />
                 <Route path="*" element={<Navigate to={isAuthenticated ? "/home" : "/"} />} />
             </Routes>
