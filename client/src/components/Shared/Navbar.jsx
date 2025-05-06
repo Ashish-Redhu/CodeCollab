@@ -20,8 +20,8 @@ export default function Navbar() {
         withCredentials: true,
       })
       setIsAuthenticated(false)
-      navigate('/')
       await checkAuth();
+      navigate('/')
     } catch (err) {
       console.error('Logout failed:', err)
     } finally {

@@ -49,12 +49,19 @@ export const loginUser = async (req, res) => {
 
 export const logoutUser = (req, res) => {
   try {
-    res.clearCookie('token').json({ message: 'Logged out' });
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: true,       // Only over HTTPS
+      sameSite: 'None',   // Required for cross-site cookies
+    });
+
+    return res.status(200).json({ message: 'Logged out' });
   } catch (error) {
     console.error('Logout Error:', error);
     res.status(500).json({ message: 'Something went wrong. Please try again.' });
   }
 };
+
 
 
 export const deleteUser = async (req, res) => {
@@ -167,21 +174,14 @@ export const resetPassword = async (req, res) => {
       resetTokenExpires: { $gt: Date.now() }, // check if token is still valid
     })
 
-    console.log("xx1");
-
     if (!user) {
       return res.status(400).json({ message: 'Invalid or expired token' })
     }
-    console.log("xx2");
-    console.log(user);
 
     user.password = newPassword
     user.resetToken = undefined
     user.resetTokenExpires = undefined
-    console.log("xx3");
     await user.save()
-    console.log("xx4");
-
     res.json({ message: 'Password reset successfully' })
   } catch (err) {
     console.error(err)
