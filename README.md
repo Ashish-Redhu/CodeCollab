@@ -120,8 +120,7 @@ CodeCollab/ <br>
 |-------------|--------------|
 | ![Chat](./pictures/RoomPage_Chat.png)  | ![LandingPage](./pictures/LandingPage.png) |
 | Login Page  | Code Editor  |
-|-------------|--------------|
-| ![Login](./pictures/LoginPage.png.png)  | ![Coding](./pictures/RoomPage_Coding.png) |
+| ![Login](./pictures/LoginPage.png)  | ![Coding](./pictures/RoomPage_Coding.png) |
 
 <br/>
 
