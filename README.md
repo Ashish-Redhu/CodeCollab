@@ -2,7 +2,7 @@
 
 > **A Real-Time Code Collaboration Platform with Chat and Media Sharing**
 
-![CodeCollab Banner]('./pictures/HomePage.png')
+![CodeCollab Banner](./pictures/HomePage.png)
 
 **CodeCollab** is a powerful full-stack web application designed to enable developers to **collaborate on code in real-time**, **chat instantly**, and **share media**, all in one unified workspace. It’s ideal for interviews, pair programming, remote teaching, and technical discussions.
 
@@ -116,9 +116,12 @@ CodeCollab/ <br>
 
 ## 📸 Screenshots
 
-| Code Editor | Real-Time Chat | Media Sharing |
-|-------------|----------------|----------------|
-| ![Chat](./pictures/RoomPage_Chat.png) | ![Coding](./RoomPage_Coding.png) | ![LandingPage](./pictures/LandingPage.png) |
+| Code Editor | Landing Page |
+|-------------|--------------|
+| ![Chat](./pictures/RoomPage_Chat.png)  | ![LandingPage](./pictures/LandingPage.png) |
+| Login Page  | Code Editor  |
+|-------------|--------------|
+| ![Login](./pictures/LoginPage.png.png)  | ![Coding](./pictures/RoomPage_Coding.png) |
 
 <br/>
 
