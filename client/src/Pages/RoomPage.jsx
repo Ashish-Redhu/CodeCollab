@@ -62,7 +62,7 @@ export default function RoomPage() {
 
 
   useEffect(() => {
-    console.log("Mounting RoomPage...");
+    // console.log("Mounting RoomPage...");
     axios
       .get(`${import.meta.env.VITE_SERVER_URL}/api/rooms/getRoom/${roomId}`, {
         withCredentials: true,

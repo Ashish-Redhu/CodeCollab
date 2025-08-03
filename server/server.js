@@ -21,7 +21,7 @@ const io = new Server(server, {
   }
 })
 
-const usersActiveInRoom = {} // roomId => [ { socketId, username } ]
+const usersActiveInRooms = {} // roomId => [ { socketId, username } ]
 
 // Here's what's happening below:
 // 1. io --> is your Socket.IO server instance.
@@ -35,11 +35,20 @@ io.on('connection', (socket) => {
 
   socket.on('enter-room', ({ roomId, username }) => {
     socket.join(roomId)
-    if (!usersActiveInRoom[roomId]) usersActiveInRoom[roomId] = []
-    usersActiveInRoom[roomId].push({ socketId: socket.id, username })
+    if (!usersActiveInRooms[roomId]) usersActiveInRooms[roomId] = [] // If that room array doesn't exist. 
+
+    const user = usersActiveInRooms[roomId].find(user => user.username === username);
+    if(user){
+      user.count += 1;
+      // usersActiveInRooms[roomId].push(user);
+    }
+    else{
+      usersActiveInRooms[roomId].push({socketId: socket.id, username, count: 1});
+    }
+
 
     // Notify everyone in room
-    io.to(roomId).emit('room-users', usersActiveInRoom[roomId])
+    io.to(roomId).emit('room-users', usersActiveInRooms[roomId])
     // console.log(`Socket/User = ${socket.id} entered room = ${roomId}`)
   })
 
@@ -116,14 +125,52 @@ io.on('connection', (socket) => {
    
   })
 
+  // socket.on('disconnect', () => {
+  //   // Remove user from all rooms
+  //   for (const roomId in usersActiveInRooms) {
+  //     usersActiveInRooms[roomId] = usersActiveInRooms[roomId].filter(user => user.socketId !== socket.id)
+  //     io.to(roomId).emit('room-users', usersActiveInRooms[roomId])
+  //   }
+  //   console.log('User disconnected:', socket.id)
+  // })
+
   socket.on('disconnect', () => {
-    // Remove user from all rooms
-    for (const roomId in usersActiveInRoom) {
-      usersActiveInRoom[roomId] = usersActiveInRoom[roomId].filter(user => user.socketId !== socket.id)
-      io.to(roomId).emit('room-users', usersActiveInRoom[roomId])
+  for (const roomId in usersActiveInRooms) {
+    const roomUsers = usersActiveInRooms[roomId];
+
+    for (let i = 0; i < roomUsers.length; i++) {
+      const user = roomUsers[i];
+
+      if (user.socketId === socket.id) {
+        user.count -= 1;
+
+        if (user.count <= 0) {
+          // Remove the user completely from the room
+          roomUsers.splice(i, 1);
+          i--; // Important: adjust index after removal
+          console.log(`User ${user.username} removed from room ${roomId} (count = 0)`);
+
+          // You can also emit something like "user inactive" here if needed
+        } else {
+          console.log(`User ${user.username} in room ${roomId} now has count = ${user.count}`);
+        }
+
+        break; // No need to continue loop for this room
+      }
     }
-    console.log('User disconnected:', socket.id)
-  })
+
+    // Clean up the room if empty (optional)
+    if (usersActiveInRooms[roomId].length === 0) {
+      delete usersActiveInRooms[roomId];
+    }
+
+    // Notify all clients in room
+    io.to(roomId).emit('room-users', usersActiveInRooms[roomId]);
+  }
+
+  console.log('User disconnected:', socket.id);
+});
+
 })
 
 // Start the server with socket.io support

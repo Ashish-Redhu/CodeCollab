@@ -23,7 +23,7 @@ export default function Login() {
     e.preventDefault()
     try {
       await axios.post(`${SERVER_URL}/api/auth/login`, { email, password }, { withCredentials: true })
-      await checkAuth()
+      await checkAuth();
       navigate('/home')
     } catch (err) {
       alert('Login failed: ' + err.response?.data?.message || err.message)
